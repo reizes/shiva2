@@ -33,6 +33,7 @@ public abstract class AbstractResultSetExtractor extends AbstractExtractor {
 	protected Object execute(Object input) throws Exception {
 		ResultSet rs = null;
 		Object output = input;
+		processedRowCount = 0;
 
 		if (datasource == null) {
 			throw new InvalidPropertyException("datasource is null");
@@ -69,11 +70,9 @@ public abstract class AbstractResultSetExtractor extends AbstractExtractor {
 	}
 
 	protected Object fetchResultSet(ResultSet rs, Object input) throws Exception {
-		processedRowCount = 0;
 		while (rs.next()) {
 			input = startProcessItem(rs);
 			executeInvalidateQuery();
-			processedRowCount++;
 		}
 		return input;
 	}
@@ -124,6 +123,13 @@ public abstract class AbstractResultSetExtractor extends AbstractExtractor {
 
 	public long getProcessedRowCount() {
 		return processedRowCount;
+	}
+
+	@Override
+	protected Object startProcessItem(Object item) throws Exception {
+		Object result = super.startProcessItem(item);
+		processedRowCount++;
+		return result;
 	}
 
 }

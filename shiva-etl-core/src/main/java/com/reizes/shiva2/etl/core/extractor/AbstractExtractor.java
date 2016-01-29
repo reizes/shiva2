@@ -17,7 +17,7 @@ public abstract class AbstractExtractor implements Extractor {
 		this.extractedItemHandler = extractedItemHandler;
 	}
 
-	protected final Object startProcessItem(Object item) throws Exception {
+	protected Object startProcessItem(Object item) throws Exception {
 		if (this.extractedItemHandler != null) {
 			return this.extractedItemHandler.processExtractedItem(item);
 		}

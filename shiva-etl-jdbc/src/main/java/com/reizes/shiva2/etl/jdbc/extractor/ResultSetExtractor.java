@@ -45,7 +45,7 @@ public class ResultSetExtractor extends AbstractResultSetExtractor {
 			}
 			output = super.execute(input);
 			executeCount++;
-		} while(super.getProcessedRowCount()>0);
+		} while(repeatQueryUntilEmpty && super.getProcessedRowCount()>0);
 		
 		return output;
 	}
