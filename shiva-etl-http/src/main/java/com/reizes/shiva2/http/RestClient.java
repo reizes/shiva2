@@ -3,7 +3,6 @@ package com.reizes.shiva2.http;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -40,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RestClient {
 	URI uri;
+	Gson gson = new Gson();
 
 	public enum Method {
 		GET, PUT, POST, DELETE;
@@ -143,18 +143,36 @@ public class RestClient {
 	}
 
 	public InputStream postString(String requestUri, String body) throws IOException {
-		return request(Method.POST, requestUri, null, new StringEntity(body));
+		return request(Method.POST, requestUri, null, new StringEntity(body, Consts.UTF_8));
 	}
 
 	public InputStream postString(String requestUri, Map<String, String> headers, String body) throws IOException {
-		return request(Method.POST, requestUri, headers, new StringEntity(body));
+		return request(Method.POST, requestUri, headers, new StringEntity(body, Consts.UTF_8));
+	}
+
+	public InputStream postJson(String requestUri, Map<String, Object> jsonData) throws IOException {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("Content-Type", "Application/json");
+		return request(Method.POST, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
+	}
+
+	public InputStream postJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
+		if (headers!=null && !headers.containsKey("Content-Type")) {
+			headers.put("Content-Type", "Application/json");
+		}
+		return request(Method.POST, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
 	}
 
 	public InputStream postFormParams(String requestUri, Map<String, String> params) throws IOException {
-		return request(Method.POST, requestUri, null, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("Content-Type", "application/x-www-form-urlencoded");
+		return request(Method.POST, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
 	public InputStream postFormParams(String requestUri, Map<String, String> headers, Map<String, String> params) throws IOException {
+		if (headers!=null && !headers.containsKey("Content-Type")) {
+			headers.put("Content-Type", "application/x-www-form-urlencoded");
+		}
 		return request(Method.POST, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
@@ -183,18 +201,36 @@ public class RestClient {
 	}
 
 	public InputStream putString(String requestUri, String body) throws IOException {
-		return request(Method.PUT, requestUri, null, new StringEntity(body));
+		return request(Method.PUT, requestUri, null, new StringEntity(body, Consts.UTF_8));
 	}
 
 	public InputStream putString(String requestUri, Map<String, String> headers, String body) throws IOException {
-		return request(Method.PUT, requestUri, headers, new StringEntity(body));
+		return request(Method.PUT, requestUri, headers, new StringEntity(body, Consts.UTF_8));
+	}
+
+	public InputStream putJson(String requestUri, Map<String, Object> jsonData) throws IOException {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("Content-Type", "Application/json");
+		return request(Method.PUT, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
+	}
+
+	public InputStream putJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
+		if (headers!=null && !headers.containsKey("Content-Type")) {
+			headers.put("Content-Type", "Application/json");
+		}
+		return request(Method.PUT, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
 	}
 
 	public InputStream putFormParams(String requestUri, Map<String, String> params) throws IOException {
-		return request(Method.PUT, requestUri, null, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("Content-Type", "application/x-www-form-urlencoded");
+		return request(Method.PUT, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
 	public InputStream putFormParams(String requestUri, Map<String, String> headers, Map<String, String> params) throws IOException {
+		if (headers!=null && !headers.containsKey("Content-Type")) {
+			headers.put("Content-Type", "application/x-www-form-urlencoded");
+		}
 		return request(Method.PUT, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 

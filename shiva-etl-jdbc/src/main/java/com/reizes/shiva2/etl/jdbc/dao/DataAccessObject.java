@@ -173,6 +173,7 @@ public class DataAccessObject {
 	 * @return Map<String, Object> 형태의 결과 값
 	 * @throws Exception -
 	 */
+	@SuppressWarnings("unchecked")
 	public Map<String, Object> executeSelectSingle(String query, Object param) throws Exception {
 		return (Map<String, Object>)executeSelectSingle(query, param, DEFAULT_RESULT_CLASS);
 	}
@@ -228,6 +229,7 @@ public class DataAccessObject {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private <T> T getResultObject(Class<T> resultClass) throws Exception {
 		if (PRIMITIVE_CLASS.contains(resultClass) || resultClass.isPrimitive()) {
 			return (T)ConvertUtils.convert(new Object(), resultClass);
@@ -253,6 +255,7 @@ public class DataAccessObject {
 	 * @return Map<String, Object> 형태의 결과 값 리스트
 	 * @throws Exception -
 	 */
+	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> executeSelect(String query, Object param) throws Exception {
 		return (List<Map<String, Object>>)executeSelect(query, param, DEFAULT_RESULT_CLASS);
 	}
@@ -479,6 +482,7 @@ public class DataAccessObject {
 		return ps;
 	}
 
+	@SuppressWarnings("unchecked")
 	private <T> T getResultFromResultSet(ResultSet rs, T resultObject) throws Exception {
 		ResultSetMetaData rsmd = rs.getMetaData();
 		int columnCount = rsmd.getColumnCount();
