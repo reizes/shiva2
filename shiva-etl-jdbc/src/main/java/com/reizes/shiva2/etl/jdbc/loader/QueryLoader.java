@@ -2,8 +2,12 @@ package com.reizes.shiva2.etl.jdbc.loader;
 
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.sql.DataSource;
+
+import org.apache.commons.dbcp2.BasicDataSourceFactory;
 
 import com.reizes.shiva2.etl.core.AfterProcessAware;
 import com.reizes.shiva2.etl.core.BeforeProcessAware;
@@ -14,6 +18,22 @@ import com.reizes.shiva2.etl.core.loader.AbstractLoader;
 public class QueryLoader extends AbstractLoader implements BeforeProcessAware, AfterProcessAware {
 	private DataSource datasource;
 	private Connection connection;
+
+	public QueryLoader() {
+		
+	}
+	
+	public QueryLoader(DataSource datasource) {
+		this.setDatasource(datasource);
+	}
+	
+	public QueryLoader(Properties prop) throws Exception {
+		this.setDatasource(prop);
+	}
+	
+	public QueryLoader(Map<String, Object> datasourceProperties) throws Exception {
+		this.setDatasource(datasourceProperties);
+	}
 
 	@Override
 	public Object doProcess(Object input) throws Exception {
@@ -31,6 +51,16 @@ public class QueryLoader extends AbstractLoader implements BeforeProcessAware, A
 
 	public void setDatasource(DataSource datasource) {
 		this.datasource = datasource;
+	}
+
+	public void setDatasource(Properties prop) throws Exception {
+		this.datasource = BasicDataSourceFactory.createDataSource(prop);
+	}
+
+	public void setDatasource(Map<String, Object> datasourceProperties) throws Exception {
+		Properties prop = new Properties();
+		prop.putAll(datasourceProperties);
+		this.datasource = BasicDataSourceFactory.createDataSource(prop);
 	}
 
 	@Override

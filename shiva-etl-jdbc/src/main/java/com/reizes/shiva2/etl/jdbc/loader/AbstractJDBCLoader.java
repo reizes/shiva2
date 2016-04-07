@@ -5,10 +5,14 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
+
+import org.apache.commons.dbcp2.BasicDataSourceFactory;
 
 import com.reizes.shiva2.etl.core.AfterProcessAware;
 import com.reizes.shiva2.etl.core.BeforeProcessAware;
@@ -37,6 +41,21 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Befor
 
 	abstract protected Object getData(Object object, String name) throws Exception;
 
+	public AbstractJDBCLoader() {
+		
+	}
+	
+	public AbstractJDBCLoader(DataSource datasource) {
+		this.setDatasource(datasource);
+	}
+	
+	public AbstractJDBCLoader(Properties prop) throws Exception {
+		this.setDatasource(prop);
+	}
+	
+	public AbstractJDBCLoader(Map<String, Object> datasourceProperties) throws Exception {
+		this.setDatasource(datasourceProperties);
+	}
 	/*
 	 * prepare parameter value : #column# -> ?
 	 */
@@ -159,6 +178,16 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Befor
 
 	public void setDatasource(DataSource datasource) {
 		this.datasource = datasource;
+	}
+
+	public void setDatasource(Properties prop) throws Exception {
+		this.datasource = BasicDataSourceFactory.createDataSource(prop);
+	}
+
+	public void setDatasource(Map<String, Object> datasourceProperties) throws Exception {
+		Properties prop = new Properties();
+		prop.putAll(datasourceProperties);
+		this.datasource = BasicDataSourceFactory.createDataSource(prop);
 	}
 
 	public String getQuery() {

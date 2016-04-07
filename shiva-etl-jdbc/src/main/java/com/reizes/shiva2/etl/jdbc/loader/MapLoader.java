@@ -1,11 +1,30 @@
 package com.reizes.shiva2.etl.jdbc.loader;
 
 import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import com.reizes.shiva2.utils.StringUtil;
 
 public class MapLoader extends AbstractJDBCLoader {
 	private boolean useCamel = false;
+
+	public MapLoader() {
+		super();
+	}
+
+	public MapLoader(DataSource datasource) {
+		super(datasource);
+	}
+
+	public MapLoader(Map<String, Object> datasourceProperties) throws Exception {
+		super(datasourceProperties);
+	}
+
+	public MapLoader(Properties prop) throws Exception {
+		super(prop);
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override

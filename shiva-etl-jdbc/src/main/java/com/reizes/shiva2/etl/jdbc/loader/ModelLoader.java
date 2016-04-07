@@ -1,5 +1,10 @@
 package com.reizes.shiva2.etl.jdbc.loader;
 
+import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
+
 import org.apache.commons.beanutils.PropertyUtils;
 
 import com.reizes.shiva2.type.EnumType;
@@ -7,6 +12,22 @@ import com.reizes.shiva2.utils.StringUtil;
 
 public class ModelLoader extends AbstractJDBCLoader {
 	private boolean useCamel = true;
+
+	public ModelLoader() {
+		super();
+	}
+
+	public ModelLoader(DataSource datasource) {
+		super(datasource);
+	}
+
+	public ModelLoader(Map<String, Object> datasourceProperties) throws Exception {
+		super(datasourceProperties);
+	}
+
+	public ModelLoader(Properties prop) throws Exception {
+		super(prop);
+	}
 
 	@Override
 	protected Object getData(Object object, String name) throws Exception {
