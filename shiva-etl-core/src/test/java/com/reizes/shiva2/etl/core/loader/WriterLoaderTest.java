@@ -8,29 +8,30 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.reizes.shiva2.etl.core.EtlElement;
-import com.reizes.shiva2.etl.core.EtlProcessor;
-import com.reizes.shiva2.etl.core.ExecutionStatus;
-import com.reizes.shiva2.etl.core.InvalidPropertyException;
-import com.reizes.shiva2.etl.core.ProcessStatus;
+import com.reizes.shiva2.core.ExecutionStatus;
+import com.reizes.shiva2.core.InvalidPropertyException;
+import com.reizes.shiva2.core.ProcessStatus;
+import com.reizes.shiva2.core.Task;
+import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.loader.WriterLoader;
 import com.reizes.shiva2.etl.core.mock.MockEtlElement;
 import com.reizes.shiva2.etl.core.mock.MockExtractor;
 import com.reizes.shiva2.etl.core.mock.MockWriter;
 
 public class WriterLoaderTest {
-	private EtlProcessor etlProcessor;
-	private LinkedList<EtlElement> elementList;
+	private TasksProcessor etlProcessor;
+	private LinkedList<Task> elementList;
 	private int elementCount=5;
 	private int itemCount=100;
 
 	@Before
 	public void setUp() throws Exception {
 		MockEtlElement.resetProcessCount();
-		this.etlProcessor=new EtlProcessor();
+		this.etlProcessor=new TasksProcessor();
 		
-		this.elementList=new LinkedList<EtlElement>(); 
+		this.elementList=new LinkedList<Task>(); 
 		for(int i=0;i<elementCount;i++) {
-			EtlElement element=new MockEtlElement();
+			Task element=new MockEtlElement();
 			elementList.add(element);
 		}
 	}
@@ -46,9 +47,9 @@ public class WriterLoaderTest {
 	public void testDoProcessNullWriter() {
 		assertEquals(this.elementList.size(),this.elementCount);
 		this.elementList.add(new WriterLoader());
-		this.etlProcessor.setElementList(this.elementList);
-		assertNotNull(this.etlProcessor.getElementList());
-		assertEquals(this.etlProcessor.getElementList().size(),this.elementCount+1);
+		this.etlProcessor.setTasks(this.elementList);
+		assertNotNull(this.etlProcessor.getTasks());
+		assertEquals(this.etlProcessor.getTasks().size(),this.elementCount+1);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		LinkedList<Object> mockData=new LinkedList<Object>();
@@ -77,9 +78,9 @@ public class WriterLoaderTest {
 		MockWriter writer=new MockWriter();
 		loader.setWriter(writer);
 		this.elementList.add(loader);
-		this.etlProcessor.setElementList(this.elementList);
-		assertNotNull(this.etlProcessor.getElementList());
-		assertEquals(this.etlProcessor.getElementList().size(),this.elementCount+1);
+		this.etlProcessor.setTasks(this.elementList);
+		assertNotNull(this.etlProcessor.getTasks());
+		assertEquals(this.etlProcessor.getTasks().size(),this.elementCount+1);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		LinkedList<Object> mockData=new LinkedList<Object>();
@@ -112,9 +113,9 @@ public class WriterLoaderTest {
 		MockWriter writer=new MockWriter();
 		loader.setWriter(writer);
 		this.elementList.add(loader);
-		this.etlProcessor.setElementList(this.elementList);
-		assertNotNull(this.etlProcessor.getElementList());
-		assertEquals(this.etlProcessor.getElementList().size(),this.elementCount+1);
+		this.etlProcessor.setTasks(this.elementList);
+		assertNotNull(this.etlProcessor.getTasks());
+		assertEquals(this.etlProcessor.getTasks().size(),this.elementCount+1);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		LinkedList<Object> mockData=new LinkedList<Object>();
@@ -147,9 +148,9 @@ public class WriterLoaderTest {
 		MockWriter writer=new MockWriter();
 		loader.setWriter(writer);
 		this.elementList.add(loader);
-		this.etlProcessor.setElementList(this.elementList);
-		assertNotNull(this.etlProcessor.getElementList());
-		assertEquals(this.etlProcessor.getElementList().size(),this.elementCount+1);
+		this.etlProcessor.setTasks(this.elementList);
+		assertNotNull(this.etlProcessor.getTasks());
+		assertEquals(this.etlProcessor.getTasks().size(),this.elementCount+1);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		LinkedList<Object> mockData=new LinkedList<Object>();

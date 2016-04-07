@@ -1,9 +1,9 @@
 package com.reizes.shiva2.etl.core.mock;
 
-import com.reizes.shiva2.etl.core.EtlElementList;
-import com.reizes.shiva2.etl.core.extractor.ExtractedItemHandler;
+import com.reizes.shiva2.core.Tasks;
+import com.reizes.shiva2.core.reader.ExtractedItemHandler;
 
-public class MockEtlProcessor extends EtlElementList implements
+public class MockEtlProcessor extends Tasks implements
 		ExtractedItemHandler {
 
 	@Override

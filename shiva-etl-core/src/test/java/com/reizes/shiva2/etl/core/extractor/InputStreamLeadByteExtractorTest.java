@@ -11,10 +11,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.reizes.shiva2.etl.core.EtlProcessor;
-import com.reizes.shiva2.etl.core.ExecutionStatus;
-import com.reizes.shiva2.etl.core.ProcessStatus;
-import com.reizes.shiva2.etl.core.loader.OutputStreamLoader;
+import com.reizes.shiva2.core.ExecutionStatus;
+import com.reizes.shiva2.core.ProcessStatus;
+import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.loader.OutputStreamLoader;
+import com.reizes.shiva2.core.reader.InputStreamLeadByteExtractor;
 import com.reizes.shiva2.etl.core.mock.MockInputStream;
 import com.reizes.shiva2.etl.core.mock.MockOutputStream;
 
@@ -38,8 +39,8 @@ public class InputStreamLeadByteExtractorTest {
 		InputStreamLeadByteExtractor extractor=new InputStreamLeadByteExtractor(inputStream);
 		extractor.setLeadByte((byte)0);
 		
-		EtlProcessor processor=new EtlProcessor();
-		processor.addElement(new OutputStreamLoader(outputStream));
+		TasksProcessor processor=new TasksProcessor();
+		processor.addTask(new OutputStreamLoader(outputStream));
 		processor.setExtractor(extractor);
 		
 		// create list for check
@@ -81,8 +82,8 @@ public class InputStreamLeadByteExtractorTest {
 		extractor.setLeadByte((byte)0);
 		extractor.setEscapeByte((byte)100);
 		
-		EtlProcessor processor=new EtlProcessor();
-		processor.addElement(new OutputStreamLoader(outputStream));
+		TasksProcessor processor=new TasksProcessor();
+		processor.addTask(new OutputStreamLoader(outputStream));
 		processor.setExtractor(extractor);
 		
 		// create list for check

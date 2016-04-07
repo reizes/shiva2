@@ -8,8 +8,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.reizes.shiva2.etl.core.EtlElement;
-import com.reizes.shiva2.etl.core.EtlProcessor;
+import com.reizes.shiva2.core.Task;
+import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.reader.NullItemHandlerException;
 import com.reizes.shiva2.etl.core.mock.MockEtlElement;
 import com.reizes.shiva2.etl.core.mock.MockExtractor;
 
@@ -45,9 +46,9 @@ public class AbstractExtractorTest {
 	
 	@Test
 	public void testDoProcess() {
-		EtlProcessor processor=new EtlProcessor();
-		EtlElement element=new MockEtlElement();
-		processor.setElement(element);
+		TasksProcessor processor=new TasksProcessor();
+		Task element=new MockEtlElement();
+		processor.setTask(element);
 		this.extractor.setExtractedItemHandler(processor);
 		try {
 			this.extractor.doProcess(null);

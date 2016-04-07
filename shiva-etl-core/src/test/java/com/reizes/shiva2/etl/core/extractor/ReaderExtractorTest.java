@@ -8,10 +8,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.reizes.shiva2.etl.core.EtlProcessor;
-import com.reizes.shiva2.etl.core.ExecutionStatus;
-import com.reizes.shiva2.etl.core.ProcessStatus;
-import com.reizes.shiva2.etl.core.loader.WriterLoader;
+import com.reizes.shiva2.core.ExecutionStatus;
+import com.reizes.shiva2.core.ProcessStatus;
+import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.loader.WriterLoader;
+import com.reizes.shiva2.core.reader.ReaderExtractor;
 import com.reizes.shiva2.etl.core.mock.MockReader;
 import com.reizes.shiva2.etl.core.mock.MockWriter;
 
@@ -32,8 +33,8 @@ public class ReaderExtractorTest {
 		reader.setInputData(data);
 		MockWriter writer=new MockWriter();
 		
-		EtlProcessor processor=new EtlProcessor();
-		processor.addElement(new WriterLoader(writer));
+		TasksProcessor processor=new TasksProcessor();
+		processor.addTask(new WriterLoader(writer));
 		processor.setExtractor(new ReaderExtractor(reader));
 		
 		// create list for check

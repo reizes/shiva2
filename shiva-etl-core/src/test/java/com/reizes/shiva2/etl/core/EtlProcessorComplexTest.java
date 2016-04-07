@@ -8,15 +8,27 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.reizes.shiva2.etl.core.context.ProcessContext;
-import com.reizes.shiva2.etl.core.context.ProcessContextAware;
+import com.reizes.shiva2.core.AfterItemProcessAware;
+import com.reizes.shiva2.core.AfterItemProcessListener;
+import com.reizes.shiva2.core.AfterProcessListener;
+import com.reizes.shiva2.core.BeforeItemProcessAware;
+import com.reizes.shiva2.core.BeforeItemProcessListener;
+import com.reizes.shiva2.core.BeforeProcessListener;
+import com.reizes.shiva2.core.ExecutionStatus;
+import com.reizes.shiva2.core.ProcessStatus;
+import com.reizes.shiva2.core.Task;
+import com.reizes.shiva2.core.Tasks;
+import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.TasksProcessorAware;
+import com.reizes.shiva2.core.context.ProcessContext;
+import com.reizes.shiva2.core.context.ProcessContextAware;
 import com.reizes.shiva2.etl.core.mock.MockEtlElement;
 import com.reizes.shiva2.etl.core.mock.MockExtractor;
 
 public class EtlProcessorComplexTest {
 
-	private EtlProcessor etlProcessor;
-	private LinkedList<EtlElement> elementList;
+	private TasksProcessor etlProcessor;
+	private LinkedList<Task> elementList;
 	private int elementCount = 0;
 	private int listCount = 5;
 	private boolean[] listFlag = new boolean[] {true, false, true, true, false};
@@ -25,21 +37,21 @@ public class EtlProcessorComplexTest {
 	@Before
 	public void setUp() throws Exception {
 		MockEtlElement.resetProcessCount();
-		this.etlProcessor = new EtlProcessor();
+		this.etlProcessor = new TasksProcessor();
 
-		this.elementList = new LinkedList<EtlElement>();
+		this.elementList = new LinkedList<Task>();
 
 		for (int i = 0; i < listFlag.length; i++) {
 			if (listFlag[i]) {
-				EtlElementList list = new EtlElementList();
+				Tasks list = new Tasks();
 				for (int j = 0; j < listCount; j++) {
-					EtlElement element = new AwareTestElement();
-					list.addElement(element);
+					Task element = new AwareTestElement();
+					list.addTask(element);
 					elementCount++;
 				}
 				elementList.add(list);
 			} else {
-				EtlElement element = new AwareTestElement();
+				Task element = new AwareTestElement();
 				elementList.add(element);
 				elementCount++;
 			}
@@ -86,7 +98,7 @@ public class EtlProcessorComplexTest {
 	public int checkEtlProcessAware = 0;
 
 	private class AwareTestElement extends MockEtlElement implements BeforeItemProcessAware, AfterItemProcessAware,
-		EtlProcessorAware, ProcessContextAware {
+		TasksProcessorAware, ProcessContextAware {
 
 		private ProcessContext context;
 
@@ -107,7 +119,7 @@ public class EtlProcessorComplexTest {
 		}
 
 		@Override
-		public void setEtlProcessor(EtlProcessor processor) {
+		public void setTasksProcessor(TasksProcessor processor) {
 			if (processor != null)
 				checkEtlProcessAware++;
 		}
@@ -125,9 +137,9 @@ public class EtlProcessorComplexTest {
 	@Test
 	public void testDoProcess() {
 		assertEquals(this.elementList.size(), this.listCount);
-		this.etlProcessor.setElementList(this.elementList);
-		assertNotNull(this.etlProcessor.getElementList());
-		assertEquals(this.etlProcessor.getElementList().size(), this.listCount);
+		this.etlProcessor.setTasks(this.elementList);
+		assertNotNull(this.etlProcessor.getTasks());
+		assertEquals(this.etlProcessor.getTasks().size(), this.listCount);
 
 		MockExtractor extractor = new MockExtractor();
 		LinkedList<Object> mockData = new LinkedList<Object>();

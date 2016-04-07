@@ -10,7 +10,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.reizes.shiva2.etl.core.context.ProcessContext;
+import com.reizes.shiva2.core.ExceptionListener;
+import com.reizes.shiva2.core.ExecutionStatus;
+import com.reizes.shiva2.core.InterruptException;
+import com.reizes.shiva2.core.ProcessStatus;
+import com.reizes.shiva2.core.Task;
+import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.etl.core.mock.MockEtlElement;
 import com.reizes.shiva2.etl.core.mock.MockEtlElementRaiseException;
 import com.reizes.shiva2.etl.core.mock.MockExtractor;
@@ -38,20 +44,20 @@ public class EtlProcessorExceptionTest {
 
 	@Test
 	public void testNormalException() {
-		EtlProcessor etlProcessor=new EtlProcessor();
+		TasksProcessor etlProcessor=new TasksProcessor();
 		
 		MockEtlElementRaiseException element=new MockEtlElementRaiseException();
 		element.setException(new Exception("Normal Exception Test"));
 		
-		LinkedList<EtlElement> elementList=new LinkedList<EtlElement>(); 
+		LinkedList<Task> elementList=new LinkedList<Task>(); 
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(element);
 		elementList.add(new MockEtlElement());
-		etlProcessor.setElementList(elementList);
-		assertNotNull(etlProcessor.getElementList());
-		assertEquals(etlProcessor.getElementList().size(),5);
+		etlProcessor.setTasks(elementList);
+		assertNotNull(etlProcessor.getTasks());
+		assertEquals(etlProcessor.getTasks().size(),5);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		extractor.setMockData(this.mockData);
@@ -73,20 +79,20 @@ public class EtlProcessorExceptionTest {
 
 	@Test
 	public void testInterruptException() {
-		EtlProcessor etlProcessor=new EtlProcessor();
+		TasksProcessor etlProcessor=new TasksProcessor();
 		
 		MockEtlElementRaiseException element=new MockEtlElementRaiseException();
-		element.setException(new EtlInterruptException("Interrupt Exception Test"));
+		element.setException(new InterruptException("Interrupt Exception Test"));
 		
-		LinkedList<EtlElement> elementList=new LinkedList<EtlElement>(); 
+		LinkedList<Task> elementList=new LinkedList<Task>(); 
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(element);
 		elementList.add(new MockEtlElement());
-		etlProcessor.setElementList(elementList);
-		assertNotNull(etlProcessor.getElementList());
-		assertEquals(etlProcessor.getElementList().size(),5);
+		etlProcessor.setTasks(elementList);
+		assertNotNull(etlProcessor.getTasks());
+		assertEquals(etlProcessor.getTasks().size(),5);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		extractor.setMockData(this.mockData);
@@ -120,20 +126,20 @@ public class EtlProcessorExceptionTest {
 	
 	@Test
 	public void testExceptionAndStop() {
-		EtlProcessor etlProcessor=new EtlProcessor();
+		TasksProcessor etlProcessor=new TasksProcessor();
 		
 		MockEtlElementRaiseException element=new MockEtlElementRaiseException();
 		element.setException(new Exception("Normal Exception Test"));
 		
-		LinkedList<EtlElement> elementList=new LinkedList<EtlElement>(); 
+		LinkedList<Task> elementList=new LinkedList<Task>(); 
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(element);
 		elementList.add(new MockEtlElement());
-		etlProcessor.setElementList(elementList);
-		assertNotNull(etlProcessor.getElementList());
-		assertEquals(etlProcessor.getElementList().size(),5);
+		etlProcessor.setTasks(elementList);
+		assertNotNull(etlProcessor.getTasks());
+		assertEquals(etlProcessor.getTasks().size(),5);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		extractor.setMockData(this.mockData);
@@ -159,20 +165,20 @@ public class EtlProcessorExceptionTest {
 	
 	@Test
 	public void testExceptionAndContinue() {
-		EtlProcessor etlProcessor=new EtlProcessor();
+		TasksProcessor etlProcessor=new TasksProcessor();
 		
 		MockEtlElementRaiseException element=new MockEtlElementRaiseException();
 		element.setException(new Exception("Normal Exception Test"));
 		
-		LinkedList<EtlElement> elementList=new LinkedList<EtlElement>(); 
+		LinkedList<Task> elementList=new LinkedList<Task>(); 
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(element);
 		elementList.add(new MockEtlElement());
-		etlProcessor.setElementList(elementList);
-		assertNotNull(etlProcessor.getElementList());
-		assertEquals(etlProcessor.getElementList().size(),5);
+		etlProcessor.setTasks(elementList);
+		assertNotNull(etlProcessor.getTasks());
+		assertEquals(etlProcessor.getTasks().size(),5);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		extractor.setMockData(this.mockData);
@@ -198,20 +204,20 @@ public class EtlProcessorExceptionTest {
 	
 	@Test
 	public void testExceptionAndSkip() {
-		EtlProcessor etlProcessor=new EtlProcessor();
+		TasksProcessor etlProcessor=new TasksProcessor();
 		
 		MockEtlElementRaiseException element=new MockEtlElementRaiseException();
 		element.setException(new Exception("Normal Exception Test"));
 		
-		LinkedList<EtlElement> elementList=new LinkedList<EtlElement>(); 
+		LinkedList<Task> elementList=new LinkedList<Task>(); 
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(element);
 		elementList.add(new MockEtlElement());
-		etlProcessor.setElementList(elementList);
-		assertNotNull(etlProcessor.getElementList());
-		assertEquals(etlProcessor.getElementList().size(),5);
+		etlProcessor.setTasks(elementList);
+		assertNotNull(etlProcessor.getTasks());
+		assertEquals(etlProcessor.getTasks().size(),5);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		extractor.setMockData(this.mockData);

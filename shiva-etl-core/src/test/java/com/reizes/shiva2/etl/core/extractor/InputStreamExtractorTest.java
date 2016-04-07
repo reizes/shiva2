@@ -8,10 +8,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.reizes.shiva2.etl.core.EtlProcessor;
-import com.reizes.shiva2.etl.core.ExecutionStatus;
-import com.reizes.shiva2.etl.core.ProcessStatus;
-import com.reizes.shiva2.etl.core.loader.OutputStreamLoader;
+import com.reizes.shiva2.core.ExecutionStatus;
+import com.reizes.shiva2.core.ProcessStatus;
+import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.loader.OutputStreamLoader;
+import com.reizes.shiva2.core.reader.InputStreamExtractor;
 import com.reizes.shiva2.etl.core.mock.MockInputStream;
 import com.reizes.shiva2.etl.core.mock.MockOutputStream;
 
@@ -32,8 +33,8 @@ public class InputStreamExtractorTest {
 		inputStream.setInputData(data);
 		MockOutputStream outputStream=new MockOutputStream();
 		
-		EtlProcessor processor=new EtlProcessor();
-		processor.addElement(new OutputStreamLoader(outputStream));
+		TasksProcessor processor=new TasksProcessor();
+		processor.addTask(new OutputStreamLoader(outputStream));
 		processor.setExtractor(new InputStreamExtractor(inputStream));
 		
 		// create list for check

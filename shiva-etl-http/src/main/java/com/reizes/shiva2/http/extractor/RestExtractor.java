@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import com.reizes.shiva2.etl.core.extractor.AbstractExtractor;
+import com.reizes.shiva2.core.reader.AbstractExtractor;
 import com.reizes.shiva2.http.RestClient;
 
 public class RestExtractor extends AbstractExtractor {

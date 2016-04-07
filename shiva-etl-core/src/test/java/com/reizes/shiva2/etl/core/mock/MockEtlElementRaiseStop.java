@@ -1,11 +1,11 @@
 package com.reizes.shiva2.etl.core.mock;
 
-import com.reizes.shiva2.etl.core.EtlElement;
-import com.reizes.shiva2.etl.core.ExecutionStatus;
-import com.reizes.shiva2.etl.core.context.ProcessContext;
-import com.reizes.shiva2.etl.core.context.ProcessContextAware;
+import com.reizes.shiva2.core.ExecutionStatus;
+import com.reizes.shiva2.core.Task;
+import com.reizes.shiva2.core.context.ProcessContext;
+import com.reizes.shiva2.core.context.ProcessContextAware;
 
-public class MockEtlElementRaiseStop implements EtlElement,ProcessContextAware {
+public class MockEtlElementRaiseStop implements Task,ProcessContextAware {
 	private static int processCount=0;
 	private static int stop=0;
 	private ProcessContext context;

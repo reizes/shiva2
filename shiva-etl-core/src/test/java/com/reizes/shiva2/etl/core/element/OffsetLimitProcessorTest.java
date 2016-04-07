@@ -7,19 +7,20 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.reizes.shiva2.etl.core.EtlProcessor;
-import com.reizes.shiva2.etl.core.extractor.ArrayExtractor;
-import com.reizes.shiva2.etl.core.loader.ListLoader;
+import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.loader.ListLoader;
+import com.reizes.shiva2.core.reader.ArrayExtractor;
+import com.reizes.shiva2.core.task.OffsetLimitProcessor;
 
 public class OffsetLimitProcessorTest {
 
 	@Test
 	public void testOffset() throws Exception {
 		List<Integer> resultList = new ArrayList<>();
-		EtlProcessor testProcessor = new EtlProcessor();
+		TasksProcessor testProcessor = new TasksProcessor();
 		testProcessor.setExtractor(new ArrayExtractor<Integer>())
-		.addElement(new OffsetLimitProcessor(5))
-		.addElement(new ListLoader<Integer>(resultList));
+		.addTask(new OffsetLimitProcessor(5))
+		.addTask(new ListLoader<Integer>(resultList));
 		
 		Integer[] data = {1,2,3,4,5,6,7,8,9,10};
 		Integer[] expected = {6,7,8,9,10};
@@ -32,10 +33,10 @@ public class OffsetLimitProcessorTest {
 	@Test
 	public void testLimit() throws Exception {
 		List<Integer> resultList = new ArrayList<>();
-		EtlProcessor testProcessor = new EtlProcessor();
+		TasksProcessor testProcessor = new TasksProcessor();
 		testProcessor.setExtractor(new ArrayExtractor<Integer>())
-		.addElement(new OffsetLimitProcessor(0, 3))
-		.addElement(new ListLoader<Integer>(resultList));
+		.addTask(new OffsetLimitProcessor(0, 3))
+		.addTask(new ListLoader<Integer>(resultList));
 		
 		Integer[] data = {1,2,3,4,5,6,7,8,9,10};
 		Integer[] expected = {1,2,3};
@@ -48,10 +49,10 @@ public class OffsetLimitProcessorTest {
 	@Test
 	public void testOffsetLimit() throws Exception {
 		List<Integer> resultList = new ArrayList<>();
-		EtlProcessor testProcessor = new EtlProcessor();
+		TasksProcessor testProcessor = new TasksProcessor();
 		testProcessor.setExtractor(new ArrayExtractor<Integer>())
-		.addElement(new OffsetLimitProcessor(2, 4))
-		.addElement(new ListLoader<Integer>(resultList));
+		.addTask(new OffsetLimitProcessor(2, 4))
+		.addTask(new ListLoader<Integer>(resultList));
 		
 		Integer[] data = {1,2,3,4,5,6,7,8,9,10};
 		Integer[] expected = {3, 4, 5, 6};

@@ -1,8 +1,8 @@
 package com.reizes.shiva2.etl.core.mock;
 
-import com.reizes.shiva2.etl.core.EtlElement;
+import com.reizes.shiva2.core.Task;
 
-public class MockEtlElement implements EtlElement {
+public class MockEtlElement implements Task {
 	private static int processCount=0;
 	
 	private static synchronized void increaseProcessCount() {

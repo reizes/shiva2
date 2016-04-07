@@ -1,19 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <artifactId>shiva-common</artifactId>
+    <artifactId>shiva2-common</artifactId>
     <groupId>com.reizes.shiva2</groupId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.reizes.shiva2</groupId>
-  <artifactId>shiva-etl-http</artifactId>
-  <name>shiva etl http</name>
-  <version>2.0.0-SNAPSHOT</version>
-  <description>Shiva ETL HTTP Support Library 2016 reizes</description>
+  <artifactId>shiva2-http</artifactId>
+  <name>shiva http</name>
+  <version>0.2.0-SNAPSHOT</version>
+  <description>Shiva HTTP Support Library 2016 reizes</description>
   <dependencies>
     <dependency>
       <groupId>com.reizes.shiva2</groupId>
-      <artifactId>shiva-etl-core</artifactId>
+      <artifactId>shiva2-core</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>

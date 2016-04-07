@@ -8,25 +8,33 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.reizes.shiva2.etl.core.context.ProcessContext;
+import com.reizes.shiva2.core.AfterItemProcessListener;
+import com.reizes.shiva2.core.AfterProcessListener;
+import com.reizes.shiva2.core.BeforeItemProcessListener;
+import com.reizes.shiva2.core.BeforeProcessListener;
+import com.reizes.shiva2.core.ExecutionStatus;
+import com.reizes.shiva2.core.ProcessStatus;
+import com.reizes.shiva2.core.Task;
+import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.etl.core.mock.MockEtlElement;
 import com.reizes.shiva2.etl.core.mock.MockExtractor;
 
 public class EtlProcessorTest {
 	
-	private EtlProcessor etlProcessor;
-	private LinkedList<EtlElement> elementList;
+	private TasksProcessor etlProcessor;
+	private LinkedList<Task> elementList;
 	private int elementCount=5;
 	private int itemCount=100;
 
 	@Before
 	public void setUp() throws Exception {
 		MockEtlElement.resetProcessCount();
-		this.etlProcessor=new EtlProcessor();
+		this.etlProcessor=new TasksProcessor();
 		
-		this.elementList=new LinkedList<EtlElement>(); 
+		this.elementList=new LinkedList<Task>(); 
 		for(int i=0;i<elementCount;i++) {
-			EtlElement element=new MockEtlElement();
+			Task element=new MockEtlElement();
 			elementList.add(element);
 		}
 	}
@@ -41,38 +49,38 @@ public class EtlProcessorTest {
 
 	@Test
 	public void testGetElementList1() {
-		assertNull(this.etlProcessor.getElementList());
+		assertNull(this.etlProcessor.getTasks());
 	}
 
 	@Test
 	public void testSetElementList() {
 		assertEquals(this.elementList.size(),this.elementCount);
-		this.etlProcessor.setElementList(this.elementList);
-		assertNotNull(this.etlProcessor.getElementList());
+		this.etlProcessor.setTasks(this.elementList);
+		assertNotNull(this.etlProcessor.getTasks());
 	}
 
 	@Test
 	public void testGetElementList2() {
-		this.etlProcessor.setElementList(this.elementList);
-		assertNotNull(this.etlProcessor.getElementList());
-		assertEquals(this.etlProcessor.getElementList().size(),this.elementCount);
+		this.etlProcessor.setTasks(this.elementList);
+		assertNotNull(this.etlProcessor.getTasks());
+		assertEquals(this.etlProcessor.getTasks().size(),this.elementCount);
 	}
 
 	@Test
 	public void testSetElement() {
-		EtlElement element=new MockEtlElement();
-		this.etlProcessor.setElement(element);
-		assertEquals(this.etlProcessor.getElementList().size(),1);
+		Task element=new MockEtlElement();
+		this.etlProcessor.setTask(element);
+		assertEquals(this.etlProcessor.getTasks().size(),1);
 	}
 
 	@Test
 	public void testAddElement() {
-		EtlElement element=new MockEtlElement();
-		this.etlProcessor.setElement(element);
-		assertEquals(this.etlProcessor.getElementList().size(),1);
-		EtlElement element2=new MockEtlElement();
-		this.etlProcessor.addElement(element2);
-		assertEquals(this.etlProcessor.getElementList().size(),2);
+		Task element=new MockEtlElement();
+		this.etlProcessor.setTask(element);
+		assertEquals(this.etlProcessor.getTasks().size(),1);
+		Task element2=new MockEtlElement();
+		this.etlProcessor.addTask(element2);
+		assertEquals(this.etlProcessor.getTasks().size(),2);
 	}
 	
 	private class ListenerTest implements BeforeProcessListener,AfterProcessListener,BeforeItemProcessListener,AfterItemProcessListener {
@@ -106,9 +114,9 @@ public class EtlProcessorTest {
 	@Test
 	public void testDoProcess() {
 		assertEquals(this.elementList.size(),this.elementCount);
-		this.etlProcessor.setElementList(this.elementList);
-		assertNotNull(this.etlProcessor.getElementList());
-		assertEquals(this.etlProcessor.getElementList().size(),this.elementCount);
+		this.etlProcessor.setTasks(this.elementList);
+		assertNotNull(this.etlProcessor.getTasks());
+		assertEquals(this.etlProcessor.getTasks().size(),this.elementCount);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		LinkedList<Object> mockData=new LinkedList<Object>();

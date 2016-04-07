@@ -8,6 +8,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.reizes.shiva2.core.ExecutionStatus;
+import com.reizes.shiva2.core.ProcessStatus;
+import com.reizes.shiva2.core.Task;
+import com.reizes.shiva2.core.TasksProcessor;
 import com.reizes.shiva2.etl.core.mock.MockEtlElement;
 import com.reizes.shiva2.etl.core.mock.MockEtlElementRaiseStop;
 import com.reizes.shiva2.etl.core.mock.MockExtractor;
@@ -36,17 +40,17 @@ public class EtlProcessorStopTest {
 
 	@Test
 	public void testStopTest() {
-		EtlProcessor etlProcessor=new EtlProcessor();
+		TasksProcessor etlProcessor=new TasksProcessor();
 		
-		LinkedList<EtlElement> elementList=new LinkedList<EtlElement>(); 
+		LinkedList<Task> elementList=new LinkedList<Task>(); 
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElement());
 		elementList.add(new MockEtlElementRaiseStop());
 		elementList.add(new MockEtlElement());
-		etlProcessor.setElementList(elementList);
-		assertNotNull(etlProcessor.getElementList());
-		assertEquals(etlProcessor.getElementList().size(),5);
+		etlProcessor.setTasks(elementList);
+		assertNotNull(etlProcessor.getTasks());
+		assertEquals(etlProcessor.getTasks().size(),5);
 		
 		MockExtractor extractor=new MockExtractor(); 
 		extractor.setMockData(this.mockData);
