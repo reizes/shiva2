@@ -1,5 +1,6 @@
 package com.reizes.shiva2.etl.core.element;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 import com.reizes.shiva2.etl.core.EtlElement;
@@ -47,11 +48,15 @@ public class LogProcessCount implements EtlElement, ProcessContextAware {
 
 		if ((count + 1) % step == 0l) {
 			String outputMsg = String.format(msgFormat, count + 1);
-			outputStream.write(outputMsg.getBytes());
-			outputStream.flush();
+			printMessage(outputMsg);
 		}
 
 		return input;
+	}
+	
+	public void printMessage(String message) throws Exception {
+		outputStream.write(message.getBytes());
+		outputStream.flush();
 	}
 
 	/**
