@@ -1,6 +1,5 @@
 package com.reizes.shiva2.core;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -135,10 +134,9 @@ public abstract class TasksBase implements Task, TasksHolder, ProcessContextAwar
 
 	protected void callBeforeProcessAware(ProcessContext context, Object data) throws Exception {
 		if (this.elementList != null) {
-			for (Iterator<Task> iter = this.elementList.iterator(); iter.hasNext();) {
-				Task next = iter.next();
-				if (next instanceof BeforeProcessAware) {
-					((BeforeProcessAware)next).onBeforeProcess(context, data);
+			for (Task task : this.elementList) {
+				if (task instanceof BeforeProcessAware) {
+					((BeforeProcessAware)task).onBeforeProcess(context, data);
 				}
 			}
 		}
@@ -146,10 +144,9 @@ public abstract class TasksBase implements Task, TasksHolder, ProcessContextAwar
 
 	protected void callAfterProcessAware(ProcessContext context, Object data) throws Exception {
 		if (this.elementList != null) {
-			for (Iterator<Task> iter = this.elementList.iterator(); iter.hasNext();) {
-				Task next = iter.next();
-				if (next instanceof AfterProcessAware) {
-					((AfterProcessAware)next).onAfterProcess(context, data);
+			for (Task task : this.elementList) {
+				if (task instanceof AfterProcessAware) {
+					((AfterProcessAware)task).onAfterProcess(context, data);
 				}
 			}
 		}
@@ -210,11 +207,11 @@ public abstract class TasksBase implements Task, TasksHolder, ProcessContextAwar
 		return this;
 	}
 
-	public boolean isShareProcessContext() {
+	public synchronized boolean isShareProcessContext() {
 		return shareProcessContext;
 	}
 
-	public void setShareProcessContext(boolean shareProcessContext) {
+	public synchronized void setShareProcessContext(boolean shareProcessContext) {
 		this.shareProcessContext = shareProcessContext;
 	}
 

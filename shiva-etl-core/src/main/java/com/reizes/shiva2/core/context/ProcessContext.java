@@ -7,7 +7,7 @@ import com.reizes.shiva2.core.ExecutionStatus;
 import com.reizes.shiva2.core.ProcessStatus;
 import com.reizes.shiva2.core.TasksProcessor;
 
-public class ProcessContext {
+public class ProcessContext implements Cloneable {
 	private TasksProcessor processor;
 	private Object processParameter; // 2.1.0 ETL Process의 doProcess로 들어온 파라메터 저장
 	private Map<String, Object> map;
@@ -17,6 +17,10 @@ public class ProcessContext {
 	private long itemCount = 0;
 	private long skipCount = 0;	// 2.1.1-SNAPSHOT 
 
+	public ProcessContext() {
+		
+	}
+	
 	public ProcessContext(TasksProcessor processor) {
 		this.processor = processor;
 		this.map = new HashMap<String, Object>();
@@ -32,67 +36,82 @@ public class ProcessContext {
 		return processor;
 	}
 
-	public void put(String name, Object value) {
+	public synchronized void put(String name, Object value) {
 		this.map.put(name, value);
 	}
 
-	public Object get(String name) {
+	public synchronized Object get(String name) {
 		return this.map.get(name);
 	}
 
-	public ExecutionStatus getExecutionStatus() {
+	public synchronized ExecutionStatus getExecutionStatus() {
 		return executionStatus;
 	}
 
-	public void setExecutionStatus(ExecutionStatus executionStatus) {
+	public synchronized void setExecutionStatus(ExecutionStatus executionStatus) {
 		this.executionStatus = executionStatus;
 	}
 
-	public ProcessStatus getProcessStatus() {
+	public synchronized ProcessStatus getProcessStatus() {
 		return processStatus;
 	}
 
-	public void setProcessStatus(ProcessStatus processStatus) {
+	public synchronized void setProcessStatus(ProcessStatus processStatus) {
 		this.processStatus = processStatus;
 	}
 
-	public boolean isThrowException() {
+	public synchronized boolean isThrowException() {
 		return throwException;
 	}
 
-	public void setThrowException(boolean throwException) {
+	public synchronized void setThrowException(boolean throwException) {
 		this.throwException = throwException;
 	}
 
-	public long getItemCount() {
+	public synchronized long getItemCount() {
 		return itemCount;
 	}
 
-	public void setItemCount(long itemCount) {
+	public synchronized void setItemCount(long itemCount) {
 		this.itemCount = itemCount;
 	}
 
-	public Map<String, Object> getContextDataMap() {
+	public synchronized Map<String, Object> getContextDataMap() {
 		return map;
 	}
 
-	public void setContextDataMap(Map<String, Object> map) {
+	public synchronized void setContextDataMap(Map<String, Object> map) {
 		this.map = map;
 	}
 
-	public Object getProcessParameter() {
+	public synchronized Object getProcessParameter() {
 		return processParameter;
 	}
 
-	public void setProcessParameter(Object processParameter) {
+	public synchronized void setProcessParameter(Object processParameter) {
 		this.processParameter = processParameter;
 	}
 
-	public long getSkipCount() {
+	public synchronized long getSkipCount() {
 		return skipCount;
 	}
 
-	public void setSkipCount(long skipCount) {
+	public synchronized void setSkipCount(long skipCount) {
 		this.skipCount = skipCount;
+	}
+	
+	public synchronized ProcessContext clone() {
+		ProcessContext clonedContext = new ProcessContext();
+		clonedContext.processor = processor;
+		clonedContext.processParameter = processParameter;
+		clonedContext.map = new HashMap<String, Object>();
+		clonedContext.map.putAll(map);
+		clonedContext.executionStatus = executionStatus;
+		clonedContext.processStatus = processStatus;
+		clonedContext.throwException = throwException;
+		clonedContext.itemCount = itemCount;
+		clonedContext.skipCount = skipCount;
+		
+		return clonedContext;
 	}
 }

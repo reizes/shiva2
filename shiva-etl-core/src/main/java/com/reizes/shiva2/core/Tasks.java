@@ -1,7 +1,5 @@
 package com.reizes.shiva2.core;
 
-import java.util.Iterator;
-
 import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.context.ProcessContextAware;
 
@@ -16,10 +14,9 @@ public class Tasks extends TasksBase implements TasksProcessorAware, BeforeProce
 	@Override
 	public void setTasksProcessor(TasksProcessor processor) {
 		if (this.elementList != null) {
-			for (Iterator<Task> iter = this.elementList.iterator(); iter.hasNext();) {
-				Task next = iter.next();
-				if (next instanceof TasksProcessorAware)
-					((TasksProcessorAware)next).setTasksProcessor(processor);
+			for (Task task : this.elementList) {
+				if (task instanceof TasksProcessorAware)
+					((TasksProcessorAware)task).setTasksProcessor(processor);
 			}
 		}
 	}
@@ -28,10 +25,9 @@ public class Tasks extends TasksBase implements TasksProcessorAware, BeforeProce
 	public void setProcessContext(ProcessContext context) {
 		super.setProcessContext(context);
 		if (this.elementList != null) {
-			for (Iterator<Task> iter = this.elementList.iterator(); iter.hasNext();) {
-				Task next = iter.next();
-				if (next instanceof ProcessContextAware)
-					((ProcessContextAware)next).setProcessContext(context);
+			for (Task task : this.elementList) {
+				if (task instanceof ProcessContextAware)
+					((ProcessContextAware)task).setProcessContext(context);
 			}
 		}
 	}
@@ -40,10 +36,9 @@ public class Tasks extends TasksBase implements TasksProcessorAware, BeforeProce
 	protected void setListenerFrom(TasksBase element) {
 		super.setListenerFrom(element);
 		if (this.elementList != null) {
-			for (Iterator<Task> iter = this.elementList.iterator(); iter.hasNext();) {
-				Task next = iter.next();
-				if (next instanceof TasksBase) {
-					((TasksBase)next).setListenerFrom(element);
+			for (Task task : this.elementList) {
+				if (task instanceof TasksBase) {
+					((TasksBase)task).setListenerFrom(element);
 				}
 			}
 		}

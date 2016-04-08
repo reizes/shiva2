@@ -1,6 +1,5 @@
 package com.reizes.shiva2.core;
 
-import java.util.Iterator;
 import java.util.List;
 
 import com.reizes.shiva2.core.context.ProcessContext;
@@ -159,11 +158,9 @@ public class TasksProcessor extends TasksBase implements ExtractedItemHandler, B
 		if (elementList == null) {
 			throw new IllegalStateException("There is no added element.");
 		}
-		for (Iterator<Task> iter = this.elementList.iterator(); iter.hasNext();) {
-			Task element = iter.next();
-
-			if (element instanceof TasksBase) {
-				((TasksBase)element).setListenerFrom(this);
+		for (Task task : this.elementList) {
+			if (task instanceof TasksBase) {
+				((TasksBase)task).setListenerFrom(this);
 			}
 		}
 	}
