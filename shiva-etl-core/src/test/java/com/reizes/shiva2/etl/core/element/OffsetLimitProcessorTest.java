@@ -8,8 +8,8 @@ import java.util.List;
 import org.junit.Test;
 
 import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.extractor.ArrayExtractor;
 import com.reizes.shiva2.core.loader.ListLoader;
-import com.reizes.shiva2.core.reader.ArrayExtractor;
 import com.reizes.shiva2.core.task.OffsetLimitProcessor;
 
 public class OffsetLimitProcessorTest {

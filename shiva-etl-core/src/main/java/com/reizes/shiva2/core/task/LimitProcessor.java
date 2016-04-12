@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import com.reizes.shiva2.core.AfterProcessAware;
 import com.reizes.shiva2.core.context.ProcessContext;
-import com.reizes.shiva2.core.reader.AbstractExtractor;
+import com.reizes.shiva2.core.extractor.AbstractExtractor;
 import com.reizes.shiva2.utils.StringUtil;
 
 /**

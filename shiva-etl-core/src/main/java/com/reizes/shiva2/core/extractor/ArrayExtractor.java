@@ -1,4 +1,4 @@
-package com.reizes.shiva2.core.reader;
+package com.reizes.shiva2.core.extractor;
 
 /**
  * Array의 item들을 하나씩 extract 하는 extractor

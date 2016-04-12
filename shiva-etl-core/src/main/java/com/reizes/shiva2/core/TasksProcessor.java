@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.context.ProcessContextAware;
+import com.reizes.shiva2.core.extractor.ExtractedItemHandler;
+import com.reizes.shiva2.core.extractor.Extractor;
 import com.reizes.shiva2.core.filter.AbstractFilter;
 import com.reizes.shiva2.core.loader.AbstractLoader;
-import com.reizes.shiva2.core.reader.ExtractedItemHandler;
-import com.reizes.shiva2.core.reader.Extractor;
 import com.reizes.shiva2.core.task.AbstractTask;
 
 public class TasksProcessor extends TasksBase implements ExtractedItemHandler, BeforeProcessAware, AfterProcessAware {

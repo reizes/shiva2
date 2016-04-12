@@ -11,8 +11,8 @@ import org.junit.Test;
 import com.reizes.shiva2.core.ExecutionStatus;
 import com.reizes.shiva2.core.ProcessStatus;
 import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.core.extractor.InputStreamExtractor;
 import com.reizes.shiva2.core.loader.OutputStreamLoader;
-import com.reizes.shiva2.core.reader.InputStreamExtractor;
 import com.reizes.shiva2.etl.core.mock.MockInputStream;
 import com.reizes.shiva2.etl.core.mock.MockOutputStream;
 

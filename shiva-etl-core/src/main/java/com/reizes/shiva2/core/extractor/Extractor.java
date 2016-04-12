@@ -1,4 +1,4 @@
-package com.reizes.shiva2.core.reader;
+package com.reizes.shiva2.core.extractor;
 
 import com.reizes.shiva2.core.Task;
 import com.reizes.shiva2.core.context.ProcessContext;

@@ -8,7 +8,7 @@ import java.sql.Statement;
 import javax.sql.DataSource;
 
 import com.reizes.shiva2.core.InvalidPropertyException;
-import com.reizes.shiva2.core.reader.AbstractExtractor;
+import com.reizes.shiva2.core.extractor.AbstractExtractor;
 
 /**
  * ResultSetExractor 상위 클래스 생성

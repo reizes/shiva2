@@ -100,6 +100,26 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Befor
 			parameterIndex++;
 		}
 	}
+	
+	private void connect() throws SQLException {
+		if (connection == null || connection.isClosed()) {
+			connection = datasource.getConnection();
+			
+			if (isEnableBatchUpdates()) {
+				DatabaseMetaData dbMetaData = connection.getMetaData();
+				supportsBatchUpdates = dbMetaData.supportsBatchUpdates();
+			}
+			if (!doReplace) {
+				try {
+					preparedStatement = connection.prepareStatement(processedQuery);
+				} catch (SQLException e) {
+					connection.close();
+					connection = null;
+					throw e;
+				}
+			}
+		}
+	}
 
 	@Override
 	public void onBeforeProcess(ProcessContext context, Object data) throws Exception {
@@ -111,7 +131,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Befor
 		}
 		
 		prepareQuery();
-		connection = datasource.getConnection();
+		connect();
 		
 		if (isEnableBatchUpdates()) {
 			DatabaseMetaData dbMetaData = connection.getMetaData();
@@ -131,6 +151,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Befor
 	@Override
 	public void onAfterProcess(ProcessContext context, Object data) throws SQLException {
 		if (isSupportsBatchUpdates() && curBatchUpdateCnt > 0) {
+			connect();
 			preparedStatement.executeBatch();
 			curBatchUpdateCnt = 0;
 		}
@@ -147,6 +168,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Befor
 
 	@Override
 	public Object doProcess(Object input) throws Exception {
+		connect();
 		if (doReplace) {
 			preparedStatement = connection.prepareStatement(processQueryReplace(input));
 			preparedStatement.clearParameters();
@@ -170,6 +192,14 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Befor
 		}
 		
 		return input;
+	}
+	
+	public void flush() throws SQLException {
+		if (isSupportsBatchUpdates()) {
+			connect();
+			preparedStatement.executeBatch();
+			curBatchUpdateCnt = 0;
+		}
 	}
 
 	public DataSource getDatasource() {

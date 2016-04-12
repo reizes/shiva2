@@ -3,7 +3,7 @@ package com.reizes.shiva2.etl.core.mock;
 import java.util.Iterator;
 import java.util.List;
 
-import com.reizes.shiva2.core.reader.AbstractExtractor;
+import com.reizes.shiva2.core.extractor.AbstractExtractor;
 
 public class MockExtractor extends AbstractExtractor {
 

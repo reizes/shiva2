@@ -29,8 +29,9 @@ public class JsonStringToMap extends AbstractTask implements ProcessContextAware
 			if (!isSkipOnJsonSyntaxException && isBypassOnJsonSyntaxException) {
 				return input;
 			}
-			throw ex;
+			//throw ex;
 		}
+		return input;
 	}
 
 	@Override

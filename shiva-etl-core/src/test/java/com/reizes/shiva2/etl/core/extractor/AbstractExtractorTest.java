@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import com.reizes.shiva2.core.Task;
 import com.reizes.shiva2.core.TasksProcessor;
-import com.reizes.shiva2.core.reader.NullItemHandlerException;
+import com.reizes.shiva2.core.extractor.NullItemHandlerException;
 import com.reizes.shiva2.etl.core.mock.MockEtlElement;
 import com.reizes.shiva2.etl.core.mock.MockExtractor;
 
