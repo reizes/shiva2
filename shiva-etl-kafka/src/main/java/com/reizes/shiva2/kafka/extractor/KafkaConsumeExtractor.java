@@ -28,7 +28,7 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	private String topic;
 	private String messageKey;
 	private long pollingTimeout = 1000*5; // 5 seconds
-	private int threadJobQueueCapacity = 1000;
+	private int threadJobQueueCapacity = 100;
 	private ProcessContext context;
 	private KafkaConsumerController controller = new KafkaConsumerController();
 	private KafkaOffsetListener kafkaOffsetListener;
@@ -162,7 +162,6 @@ polling:
 						}
 					} else {
 						this.thread.queue.put(record);
-						System.out.println(this.thread.queue.size());
 					}
 					if (offsetStorage != null) {
 						offsetStorage.saveOffset(record.topic(), record.partition(), record.offset());
@@ -249,8 +248,9 @@ polling:
 		return offsetStorage;
 	}
 
-	public void setOffsetStorage(OffsetStorage offsetStorage) {
+	public KafkaConsumeExtractor setOffsetStorage(OffsetStorage offsetStorage) {
 		this.offsetStorage = offsetStorage;
+		return this;
 	}
 
 	@Override
@@ -262,8 +262,9 @@ polling:
 		return threadJobQueueCapacity;
 	}
 
-	public void setThreadJobQueueCapacity(int threadJobQueueCapacity) {
+	public KafkaConsumeExtractor setThreadJobQueueCapacity(int threadJobQueueCapacity) {
 		this.threadJobQueueCapacity = threadJobQueueCapacity;
+		return this;
 	}
 
 }
