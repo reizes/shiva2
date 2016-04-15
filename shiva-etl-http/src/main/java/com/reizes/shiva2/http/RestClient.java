@@ -16,6 +16,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.StatusLine;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -53,9 +54,10 @@ public class RestClient {
 		this.setUri(new URI(uri));
 	}
 
-	public InputStream request(Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity)
+	public RestClientResponse request(Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity)
 			throws IOException {
 		InputStream is = null;
+		RestClientResponse restClientResponse = new RestClientResponse();
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		try {
 			// specify the host, protocol, and port
@@ -99,7 +101,11 @@ public class RestClient {
 				is = entity.getContent();
 			}
 
-			log.debug(httpResponse.getStatusLine().toString());
+			StatusLine statusLine = httpResponse.getStatusLine();
+			restClientResponse.setResponseCode(statusLine.getStatusCode());
+			if (statusLine.getStatusCode() != 200) {
+				log.error(requestUri+" "+method.name()+"\n"+statusLine.toString()+"\n"+requestEntity.toString());
+			}
 			Header[] responseHeaders = httpResponse.getAllHeaders();
 			for (int i = 0; i < responseHeaders.length; i++) {
 				log.debug(responseHeaders[i].toString());
@@ -114,139 +120,141 @@ public class RestClient {
 			// immediate deallocation of all system resources
 			httpclient.close();
 		}
+		
+		restClientResponse.setResponse(is);
 
-		return is;
+		return restClientResponse;
 	}
 
-	public InputStream get(String requestUri) throws IOException {
+	public RestClientResponse get(String requestUri) throws IOException {
 		return request(Method.GET, requestUri, null, null);
 	}
 
-	public InputStream get(String requestUri, Map<String, String> headers) throws IOException {
+	public RestClientResponse get(String requestUri, Map<String, String> headers) throws IOException {
 		return request(Method.GET, requestUri, headers, null);
 	}
 
-	public InputStream delete(String requestUri) throws IOException {
+	public RestClientResponse delete(String requestUri) throws IOException {
 		return request(Method.DELETE, requestUri, null, null);
 	}
 
-	public InputStream delete(String requestUri, Map<String, String> headers) throws IOException {
+	public RestClientResponse delete(String requestUri, Map<String, String> headers) throws IOException {
 		return request(Method.DELETE, requestUri, headers, null);
 	}
 
-	public InputStream post(String requestUri, HttpEntity entity) throws IOException {
+	public RestClientResponse post(String requestUri, HttpEntity entity) throws IOException {
 		return request(Method.POST, requestUri, null, entity);
 	}
 
-	public InputStream post(String requestUri, Map<String, String> headers, HttpEntity entity) throws IOException {
+	public RestClientResponse post(String requestUri, Map<String, String> headers, HttpEntity entity) throws IOException {
 		return request(Method.POST, requestUri, headers, entity);
 	}
 
-	public InputStream postString(String requestUri, String body) throws IOException {
+	public RestClientResponse postString(String requestUri, String body) throws IOException {
 		return request(Method.POST, requestUri, null, new StringEntity(body, Consts.UTF_8));
 	}
 
-	public InputStream postString(String requestUri, Map<String, String> headers, String body) throws IOException {
+	public RestClientResponse postString(String requestUri, Map<String, String> headers, String body) throws IOException {
 		return request(Method.POST, requestUri, headers, new StringEntity(body, Consts.UTF_8));
 	}
 
-	public InputStream postJson(String requestUri, Map<String, Object> jsonData) throws IOException {
+	public RestClientResponse postJson(String requestUri, Map<String, Object> jsonData) throws IOException {
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("Content-Type", "Application/json");
 		return request(Method.POST, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
 	}
 
-	public InputStream postJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
+	public RestClientResponse postJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
 		if (headers!=null && !headers.containsKey("Content-Type")) {
 			headers.put("Content-Type", "Application/json");
 		}
 		return request(Method.POST, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
 	}
 
-	public InputStream postFormParams(String requestUri, Map<String, String> params) throws IOException {
+	public RestClientResponse postFormParams(String requestUri, Map<String, String> params) throws IOException {
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("Content-Type", "application/x-www-form-urlencoded");
 		return request(Method.POST, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
-	public InputStream postFormParams(String requestUri, Map<String, String> headers, Map<String, String> params) throws IOException {
+	public RestClientResponse postFormParams(String requestUri, Map<String, String> headers, Map<String, String> params) throws IOException {
 		if (headers!=null && !headers.containsKey("Content-Type")) {
 			headers.put("Content-Type", "application/x-www-form-urlencoded");
 		}
 		return request(Method.POST, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
-	public InputStream postFile(String requestUri, File file) throws IOException {
+	public RestClientResponse postFile(String requestUri, File file) throws IOException {
 		return request(Method.POST, requestUri, null, new BufferedHttpEntity(new FileEntity(file)));
 	}
 
-	public InputStream postFile(String requestUri, Map<String, String> headers, File file) throws IOException {
+	public RestClientResponse postFile(String requestUri, Map<String, String> headers, File file) throws IOException {
 		return request(Method.POST, requestUri, headers, new BufferedHttpEntity(new FileEntity(file)));
 	}
 
-	public InputStream postInputStream(String requestUri, InputStream is) throws IOException {
+	public RestClientResponse postInputStream(String requestUri, InputStream is) throws IOException {
 		return request(Method.POST, requestUri, null, new BufferedHttpEntity(new InputStreamEntity(is)));
 	}
 
-	public InputStream postInputStream(String requestUri, Map<String, String> headers, InputStream is) throws IOException {
+	public RestClientResponse postInputStream(String requestUri, Map<String, String> headers, InputStream is) throws IOException {
 		return request(Method.POST, requestUri, headers, new BufferedHttpEntity(new InputStreamEntity(is)));
 	}
 
-	public InputStream put(String requestUri, HttpEntity entity) throws IOException {
+	public RestClientResponse put(String requestUri, HttpEntity entity) throws IOException {
 		return request(Method.PUT, requestUri, null, entity);
 	}
 
-	public InputStream put(String requestUri, Map<String, String> headers, HttpEntity entity) throws IOException {
+	public RestClientResponse put(String requestUri, Map<String, String> headers, HttpEntity entity) throws IOException {
 		return request(Method.PUT, requestUri, headers, entity);
 	}
 
-	public InputStream putString(String requestUri, String body) throws IOException {
+	public RestClientResponse putString(String requestUri, String body) throws IOException {
 		return request(Method.PUT, requestUri, null, new StringEntity(body, Consts.UTF_8));
 	}
 
-	public InputStream putString(String requestUri, Map<String, String> headers, String body) throws IOException {
+	public RestClientResponse putString(String requestUri, Map<String, String> headers, String body) throws IOException {
 		return request(Method.PUT, requestUri, headers, new StringEntity(body, Consts.UTF_8));
 	}
 
-	public InputStream putJson(String requestUri, Map<String, Object> jsonData) throws IOException {
+	public RestClientResponse putJson(String requestUri, Map<String, Object> jsonData) throws IOException {
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("Content-Type", "Application/json");
 		return request(Method.PUT, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
 	}
 
-	public InputStream putJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
+	public RestClientResponse putJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
 		if (headers!=null && !headers.containsKey("Content-Type")) {
 			headers.put("Content-Type", "Application/json");
 		}
 		return request(Method.PUT, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
 	}
 
-	public InputStream putFormParams(String requestUri, Map<String, String> params) throws IOException {
+	public RestClientResponse putFormParams(String requestUri, Map<String, String> params) throws IOException {
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("Content-Type", "application/x-www-form-urlencoded");
 		return request(Method.PUT, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
-	public InputStream putFormParams(String requestUri, Map<String, String> headers, Map<String, String> params) throws IOException {
+	public RestClientResponse putFormParams(String requestUri, Map<String, String> headers, Map<String, String> params) throws IOException {
 		if (headers!=null && !headers.containsKey("Content-Type")) {
 			headers.put("Content-Type", "application/x-www-form-urlencoded");
 		}
 		return request(Method.PUT, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
-	public InputStream putFile(String requestUri, File file) throws IOException {
+	public RestClientResponse putFile(String requestUri, File file) throws IOException {
 		return request(Method.PUT, requestUri, null, new BufferedHttpEntity(new FileEntity(file)));
 	}
 
-	public InputStream putFile(String requestUri, Map<String, String> headers, File file) throws IOException {
+	public RestClientResponse putFile(String requestUri, Map<String, String> headers, File file) throws IOException {
 		return request(Method.PUT, requestUri, headers, new BufferedHttpEntity(new FileEntity(file)));
 	}
 
-	public InputStream putInputStream(String requestUri, InputStream is) throws IOException {
+	public RestClientResponse putInputStream(String requestUri, InputStream is) throws IOException {
 		return request(Method.PUT, requestUri, null, new BufferedHttpEntity(new InputStreamEntity(is)));
 	}
 
-	public InputStream putInputStream(String requestUri, Map<String, String> headers, InputStream is) throws IOException {
+	public RestClientResponse putInputStream(String requestUri, Map<String, String> headers, InputStream is) throws IOException {
 		return request(Method.PUT, requestUri, headers, new BufferedHttpEntity(new InputStreamEntity(is)));
 	}
 	

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -35,6 +36,8 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	private PollingTimeoutListener pollingTimeoutListener;
 	private OffsetStorage offsetStorage;
 	private MessageProcessThread thread;
+	private AtomicBoolean isContinueConsume = new AtomicBoolean(true);
+	private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> currentOffset = new ConcurrentHashMap<>();
 
 	public KafkaConsumeExtractor(Map<java.lang.String, java.lang.Object> configs) {
 		consumer = new KafkaConsumer<>(configs);
@@ -60,6 +63,7 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 		
 		@Override
 		public void run() {
+			long count = 0;
 			do {
 				try {
 					ConsumerRecord<String, String> record = queue.take();
@@ -70,6 +74,11 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 					String value = record.value();
 					if (messageKey == null || messageKey.equals(key)) {
 						startProcessItem(value);
+					}
+					count++;
+					if (count%100 == 0) {
+						commit();
+						count = 0;
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -93,6 +102,7 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
             public void run() {
                 System.out.println("Starting exit...");
                 thread.isContinue.set(false);
+                isContinueConsume.set(false);
                 context.setExecutionStatus(ExecutionStatus.STOP);
                 try {
 					thread.queue.put(new ConsumerRecord<String, String>("topic",0 ,0l, "",""));
@@ -111,13 +121,24 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	}
 	
 	private void commit() {
-		consumer.commitAsync(new OffsetCommitCallback() {
+		consumer.commitAsync(currentOffset, new OffsetCommitCallback() {
 	        public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception exception) {
-	            if (exception != null)
+	            if (exception != null) {
 	            	exception.printStackTrace();
 	                System.out.println("Commit failed for offsets :" + offsets);
+	            } else {
+	            	saveOffset(offsets.keySet(), offsets);
+	            }
 	        }
 	      });
+	}
+	
+	private void saveOffset(Collection<TopicPartition> partitions, Map<TopicPartition, OffsetAndMetadata> offsets) {
+		if (offsetStorage != null) {
+			for(TopicPartition partition : partitions) {
+				offsetStorage.saveOffset(partition.topic(), partition.partition(), offsets.get(partition).offset());
+			}
+		}
 	}
 	
 	private void seek(Collection<TopicPartition> partitions) {
@@ -134,12 +155,13 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 			thread = new MessageProcessThread(threadJobQueueCapacity);
 			thread.start();
 		}
+		
 		try {
 			consumer.subscribe(Arrays.asList(topic), this);
 			consumer.poll(0);
 			seek(consumer.assignment());
 polling: 
-			while (true) {
+			while (isContinueConsume.get()) {
 				ConsumerRecords<String, String> records = consumer.poll(pollingTimeout);
 				
 				if (pollingTimeoutListener!=null && (records==null || records.count()==0)) {
@@ -148,6 +170,8 @@ polling:
 				}
 				
 				for (ConsumerRecord<String, String> record : records) {
+					currentOffset.put(new TopicPartition(record.topic(), record.partition()), new OffsetAndMetadata(record.offset()));
+					
 					if (kafkaOffsetListener!=null) {
 						kafkaOffsetListener.setOffsetAndRecord(record.topic(), record.partition(), record.offset(), record.value());
 					}
@@ -163,11 +187,7 @@ polling:
 					} else {
 						this.thread.queue.put(record);
 					}
-					if (offsetStorage != null) {
-						offsetStorage.saveOffset(record.topic(), record.partition(), record.offset());
-					}
 				}
-				commit();
 			}
 		} catch (WakeupException e) {
             // ignore for shutdown
@@ -236,6 +256,7 @@ polling:
 
 	@Override
 	public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+		saveOffset(partitions, currentOffset);
 		//commitDBTransaction();
 	}
 

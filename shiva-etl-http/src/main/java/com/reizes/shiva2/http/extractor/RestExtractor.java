@@ -1,11 +1,11 @@
 package com.reizes.shiva2.http.extractor;
 
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Map;
 
 import com.reizes.shiva2.core.extractor.AbstractExtractor;
 import com.reizes.shiva2.http.RestClient;
+import com.reizes.shiva2.http.RestClientResponse;
 
 public class RestExtractor extends AbstractExtractor {
 	private RestClient client;
@@ -17,11 +17,11 @@ public class RestExtractor extends AbstractExtractor {
 	
 	@Override
 	public Object doProcess(Object requestUri) throws Exception {
-		InputStream is = this.client.get((String)requestUri, headers);
+		RestClientResponse resut = this.client.get((String)requestUri, headers);
 		
-		startProcessItem(is);
+		startProcessItem(resut);
 		
-		is.close();
+		resut.close();
 		return requestUri;
 	}
 
