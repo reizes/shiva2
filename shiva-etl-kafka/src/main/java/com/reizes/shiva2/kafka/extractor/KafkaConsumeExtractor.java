@@ -136,7 +136,8 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	private void saveOffset(Collection<TopicPartition> partitions, Map<TopicPartition, OffsetAndMetadata> offsets) {
 		if (offsetStorage != null) {
 			for(TopicPartition partition : partitions) {
-				offsetStorage.saveOffset(partition.topic(), partition.partition(), offsets.get(partition).offset());
+				OffsetAndMetadata offset = offsets.get(partition);
+				offsetStorage.saveOffset(partition.topic(), partition.partition(), offset!=null?offset.offset():0);
 			}
 		}
 	}
