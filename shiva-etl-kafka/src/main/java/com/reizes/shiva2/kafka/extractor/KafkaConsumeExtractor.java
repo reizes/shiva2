@@ -35,7 +35,7 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	private KafkaOffsetListener kafkaOffsetListener;
 	private PollingTimeoutListener pollingTimeoutListener;
 	private OffsetStorage offsetStorage;
-	private MessageProcessThread thread;
+	//private MessageProcessThread thread;
 	private AtomicBoolean isContinueConsume = new AtomicBoolean(true);
 	private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> currentOffset = new ConcurrentHashMap<>();
 
@@ -53,7 +53,7 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 		addShutdownHook();
 	}
 	
-	private class MessageProcessThread extends Thread {
+	/*private class MessageProcessThread extends Thread {
 		private LinkedBlockingQueue<ConsumerRecord<String, String>> queue;
 		private AtomicBoolean isContinue = new AtomicBoolean(true);
 		
@@ -92,7 +92,7 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 			}
 		}
 		
-	}
+	}*/
 	
 	private void addShutdownHook() {
 		final Thread mainThread = Thread.currentThread();
@@ -101,17 +101,18 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 System.out.println("Starting exit...");
-                thread.isContinue.set(false);
+                //thread.isContinue.set(false);
                 isContinueConsume.set(false);
                 context.setExecutionStatus(ExecutionStatus.STOP);
-                try {
+                /*try {
 					thread.queue.put(new ConsumerRecord<String, String>("topic",0 ,0l, "",""));
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
-				}
+				}*/
                 // Note that shutdownhook runs in a separate thread, so the only thing we can safely do to a consumer is wake it up
                 consumer.wakeup();
                 try {
+                	System.out.println("wait join...");
                     mainThread.join();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -121,16 +122,8 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	}
 	
 	private void commit() {
-		consumer.commitAsync(currentOffset, new OffsetCommitCallback() {
-	        public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception exception) {
-	            if (exception != null) {
-	            	exception.printStackTrace();
-	                System.out.println("Commit failed for offsets :" + offsets);
-	            } else {
-	            	saveOffset(offsets.keySet(), offsets);
-	            }
-	        }
-	      });
+		consumer.commitSync(currentOffset);
+		saveOffset(currentOffset.keySet(), currentOffset);
 	}
 	
 	private void saveOffset(Collection<TopicPartition> partitions, Map<TopicPartition, OffsetAndMetadata> offsets) {
@@ -152,15 +145,16 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 
 	@Override
 	public Object doProcess(Object input) throws Exception {
-		if (thread == null) {
+		/*if (thread == null) {
 			thread = new MessageProcessThread(threadJobQueueCapacity);
 			thread.start();
-		}
+		}*/
 		
 		try {
 			consumer.subscribe(Arrays.asList(topic), this);
 			consumer.poll(0);
 			seek(consumer.assignment());
+			long count = 0;
 polling: 
 			while (isContinueConsume.get()) {
 				ConsumerRecords<String, String> records = consumer.poll(pollingTimeout);
@@ -186,9 +180,22 @@ polling:
 							break polling;
 						}
 					} else {
-						this.thread.queue.put(record);
+						//this.thread.queue.put(record);
+						String key = record.key();
+						String value = record.value();
+						if (messageKey == null || messageKey.equals(key)) {
+							startProcessItem(value);
+						}
+						count++;
+						if (count%100 == 0) {
+							commit();
+							count = 0;
+						}
 					}
 				}
+				commit();
+				count = 0;
+				if (context.getExecutionStatus() == ExecutionStatus.STOP) break;
 			}
 		} catch (WakeupException e) {
             // ignore for shutdown
