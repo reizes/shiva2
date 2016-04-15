@@ -1,12 +1,16 @@
 package com.reizes.shiva2.kafka.extractor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -36,6 +40,7 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	//private MessageProcessThread thread;
 	private AtomicBoolean isContinueConsume = new AtomicBoolean(true);
 	private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> currentOffset = new ConcurrentHashMap<>();
+	private List<Integer> assignPartitions;
 
 	public KafkaConsumeExtractor(Map<java.lang.String, java.lang.Object> configs) {
 		consumer = new KafkaConsumer<>(configs);
@@ -120,8 +125,13 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	}
 	
 	private void commit() {
-		consumer.commitSync(currentOffset);
-		saveOffset(currentOffset.keySet(), currentOffset);
+		try {
+			consumer.commitSync(currentOffset);
+			saveOffset(currentOffset.keySet(), currentOffset);
+		} catch(CommitFailedException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+		}
 	}
 	
 	private void saveOffset(Collection<TopicPartition> partitions, Map<TopicPartition, OffsetAndMetadata> offsets) {
@@ -136,7 +146,9 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	private void seek(Collection<TopicPartition> partitions) {
 		if (offsetStorage != null) {
 			for (TopicPartition partition : partitions) {
-				consumer.seek(partition, offsetStorage.loadOffset(partition.topic(), partition.partition()));
+				long offset = offsetStorage.loadOffset(partition.topic(), partition.partition());
+				System.out.println(partition.toString()+" : "+offset);
+				consumer.seek(partition, offset);
 			}
 		}
 	}
@@ -149,9 +161,18 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 		}*/
 		
 		try {
-			consumer.subscribe(Arrays.asList(topic), this);
-			consumer.poll(0);
-			seek(consumer.assignment());
+			if (assignPartitions != null) {
+				List<TopicPartition> partitions = new ArrayList<>();
+				for(Integer partition : assignPartitions) {
+					partitions.add(new TopicPartition(topic, partition));
+				}
+				consumer.assign(partitions);
+				seek(partitions);
+			} else {
+				consumer.subscribe(Arrays.asList(topic), this);
+				consumer.poll(0);
+				seek(consumer.assignment());
+			}
 			long count = 0;
 polling: 
 			while (isContinueConsume.get()) {
@@ -262,7 +283,7 @@ polling:
 
 	@Override
 	public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-		saveOffset(partitions, currentOffset);
+		commit();
 		//commitDBTransaction();
 	}
 
@@ -291,6 +312,15 @@ polling:
 
 	public KafkaConsumeExtractor setThreadJobQueueCapacity(int threadJobQueueCapacity) {
 		this.threadJobQueueCapacity = threadJobQueueCapacity;
+		return this;
+	}
+
+	public List<Integer> getAssignPartitions() {
+		return assignPartitions;
+	}
+
+	public KafkaConsumeExtractor setAssignPartitions(List<Integer> assignPartitions) {
+		this.assignPartitions = assignPartitions;
 		return this;
 	}
 
