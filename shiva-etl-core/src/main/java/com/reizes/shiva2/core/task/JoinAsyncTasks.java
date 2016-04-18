@@ -50,17 +50,21 @@ public class JoinAsyncTasks extends AbstractTask implements AsyncTasksCallback, 
 	
 	@Override
 	public Object doProcess(Object input) throws Exception {
-		resultList = new ArrayList<>();
-		finishedCount = new AtomicInteger(0);
-		for(AsyncTasks asyncTasks : asyncTasksArray) {
-			asyncTasks.doProcess(input);
+		if (asyncTasksArray.size()>0) {
+			resultList = new ArrayList<>();
+			finishedCount = new AtomicInteger(0);
+			for(AsyncTasks asyncTasks : asyncTasksArray) {
+				asyncTasks.doProcess(input);
+			}
+			
+			synchronized(this) {
+				wait(this.milli);
+			}
+			
+			return resultList;
+		} else {
+			return input;
 		}
-		
-		synchronized(this) {
-			wait(this.milli);
-		}
-		
-		return resultList;
 	}
 
 	@Override
