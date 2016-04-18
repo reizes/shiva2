@@ -58,7 +58,9 @@ public class JoinAsyncTasks extends AbstractTask implements AsyncTasksCallback, 
 			}
 			
 			synchronized(this) {
-				wait(this.milli);
+				if (finishedCount.get() < this.asyncTasksArray.size()) {
+					wait(this.milli);
+				}
 			}
 			
 			return resultList;
@@ -68,10 +70,12 @@ public class JoinAsyncTasks extends AbstractTask implements AsyncTasksCallback, 
 	}
 
 	@Override
-	public synchronized void callback(Object result) {
-		resultList.add(result);
-		if (finishedCount.incrementAndGet() == this.asyncTasksArray.size()) {
-			this.notify();
+	public void callback(Object result) {
+		synchronized(this) {
+			resultList.add(result);
+			if (finishedCount.incrementAndGet() == this.asyncTasksArray.size()) {
+				this.notify();
+			}
 		}
 	}
 
