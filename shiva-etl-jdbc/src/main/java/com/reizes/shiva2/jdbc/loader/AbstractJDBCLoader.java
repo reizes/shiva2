@@ -110,6 +110,9 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 			if (isEnableBatchUpdates()) {
 				DatabaseMetaData dbMetaData = connection.getMetaData();
 				supportsBatchUpdates = dbMetaData.supportsBatchUpdates();
+				if (supportsBatchUpdates) {
+					connection.setAutoCommit(false);
+				}
 			}
 			if (!doReplace) {
 				try {
@@ -187,6 +190,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 				if (curBatchUpdateCnt == getBatchUpdateSize()) {
 					preparedStatement.executeBatch();
 					curBatchUpdateCnt = 0;
+					connection.commit();
 				}
 			} else {
 				preparedStatement.executeUpdate();
@@ -202,6 +206,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 			try {
 				connect();
 				preparedStatement.executeBatch();
+				connection.commit();
 				curBatchUpdateCnt = 0;
 			} catch (SQLException e) {
 				throw new IOException(e);
