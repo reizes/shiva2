@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import com.reizes.shiva2.core.AfterProcessAware;
 import com.reizes.shiva2.core.BeforeProcessAware;
@@ -27,6 +28,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 	private String query;
 	private boolean supportsBatchUpdates;
 	private int batchUpdateSize = 1000;
+	private long sleepTimeWhenDeadlock = 1000;
 	private boolean enableBatchUpdates = true;
 
 	/*
@@ -152,12 +154,34 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 			}
 		}
 	}
+	
+	private synchronized void executeBatch(PreparedStatement preparedStatement) throws SQLException {
+		connect();
+		do {
+			try {
+				preparedStatement.executeBatch();
+				connection.commit();
+				break;
+			} catch (SQLException e) {
+				System.out.println(e.getMessage());
+				if (StringUtils.indexOf(e.getMessage(), "try restarting transaction")>=0) {
+					System.out.println("retrying....");
+					try {
+						Thread.sleep(sleepTimeWhenDeadlock);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+				} else {
+					throw e;
+				}
+			}
+		} while(true);
+	}
 
 	@Override
 	public void onAfterProcess(ProcessContext context, Object data) throws SQLException {
 		if (isSupportsBatchUpdates() && curBatchUpdateCnt > 0) {
-			connect();
-			preparedStatement.executeBatch();
+			executeBatch(preparedStatement);
 			curBatchUpdateCnt = 0;
 		}
 		if (preparedStatement != null) {
@@ -188,9 +212,8 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 				curBatchUpdateCnt++;
 				
 				if (curBatchUpdateCnt == getBatchUpdateSize()) {
-					preparedStatement.executeBatch();
+					executeBatch(preparedStatement);
 					curBatchUpdateCnt = 0;
-					connection.commit();
 				}
 			} else {
 				preparedStatement.executeUpdate();
@@ -204,9 +227,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 	public void flush() throws IOException  {
 		if (isSupportsBatchUpdates()) {
 			try {
-				connect();
-				preparedStatement.executeBatch();
-				connection.commit();
+				executeBatch(preparedStatement);
 				curBatchUpdateCnt = 0;
 			} catch (SQLException e) {
 				throw new IOException(e);
