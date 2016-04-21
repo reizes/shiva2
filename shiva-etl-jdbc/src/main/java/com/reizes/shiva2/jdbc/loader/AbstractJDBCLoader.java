@@ -1,5 +1,7 @@
 package com.reizes.shiva2.jdbc.loader;
 
+import java.io.Flushable;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -20,7 +22,7 @@ import com.reizes.shiva2.core.InvalidPropertyException;
 import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.loader.AbstractLoader;
 
-public abstract class AbstractJDBCLoader extends AbstractLoader implements BeforeProcessAware, AfterProcessAware {
+public abstract class AbstractJDBCLoader extends AbstractLoader implements Flushable, BeforeProcessAware, AfterProcessAware {
 	private DataSource datasource;
 	private String query;
 	private boolean supportsBatchUpdates;
@@ -194,11 +196,16 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Befor
 		return input;
 	}
 	
-	public void flush() throws SQLException {
+	@Override
+	public void flush() throws IOException  {
 		if (isSupportsBatchUpdates()) {
-			connect();
-			preparedStatement.executeBatch();
-			curBatchUpdateCnt = 0;
+			try {
+				connect();
+				preparedStatement.executeBatch();
+				curBatchUpdateCnt = 0;
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
 		}
 	}
 
