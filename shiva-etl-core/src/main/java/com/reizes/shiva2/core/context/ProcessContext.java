@@ -3,11 +3,19 @@ package com.reizes.shiva2.core.context;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.management.AttributeChangeNotification;
+import javax.management.MBeanNotificationInfo;
+import javax.management.MBeanServer;
+import javax.management.Notification;
+import javax.management.NotificationBroadcasterSupport;
+import javax.management.ObjectName;
+
 import com.reizes.shiva2.core.ExecutionStatus;
 import com.reizes.shiva2.core.ProcessStatus;
 import com.reizes.shiva2.core.TasksProcessor;
+import com.reizes.shiva2.management.Managable;
 
-public class ProcessContext implements Cloneable {
+public class ProcessContext extends NotificationBroadcasterSupport implements Managable, ProcessContextMBean, Cloneable {
 	private TasksProcessor processor;
 	private Object processParameter; // 2.1.0 ETL Process의 doProcess로 들어온 파라메터 저장
 	private Map<String, Object> map;
@@ -15,7 +23,8 @@ public class ProcessContext implements Cloneable {
 	private ProcessStatus processStatus;
 	private boolean throwException = true;
 	private long itemCount = 0;
-	private long skipCount = 0;	// 2.1.1-SNAPSHOT 
+	private long skipCount = 0;	// 2.1.1-SNAPSHOT
+	private long notificationSequenceNumber = 1;
 
 	public ProcessContext() {
 		
@@ -49,6 +58,7 @@ public class ProcessContext implements Cloneable {
 	}
 
 	public synchronized void setExecutionStatus(ExecutionStatus executionStatus) {
+		sendNotification("ExecutionStatus has changed", "executionStatus", "String", this.executionStatus.name(), executionStatus.name());
 		this.executionStatus = executionStatus;
 	}
 
@@ -57,6 +67,7 @@ public class ProcessContext implements Cloneable {
 	}
 
 	public synchronized void setProcessStatus(ProcessStatus processStatus) {
+		sendNotification("ProcessStatus has changed", "processStatus", "String", this.processStatus.name(), processStatus.name());
 		this.processStatus = processStatus;
 	}
 
@@ -113,5 +124,44 @@ public class ProcessContext implements Cloneable {
 		clonedContext.skipCount = skipCount;
 		
 		return clonedContext;
+	}
+	
+	private void sendNotification(String msg, String attributeName, String attributeType, Object oldValue, Object newValue) {
+		Notification n = new AttributeChangeNotification(this, notificationSequenceNumber++, System.currentTimeMillis(),
+				msg, attributeName, attributeType, oldValue, newValue);
+		sendNotification(n);
+	}
+
+	@Override
+	public String getExecutionStatusValue() {
+		return getExecutionStatus().name();
+	}
+
+	@Override
+	public void setExecutionStatusValue(String executionStatus) {
+		setExecutionStatus(ExecutionStatus.valueOf(executionStatus));
+	}
+
+	@Override
+	public String getProcessStatusValue() {
+		return processStatus.name();
+	}
+
+	@Override
+	public void setProcessStatusValue(String processStatus) {
+		setProcessStatus(ProcessStatus.valueOf(processStatus));
+	}
+
+	@Override
+	public MBeanNotificationInfo[] getNotificationInfo() {
+		String[] types = new String[] { AttributeChangeNotification.ATTRIBUTE_CHANGE };
+		MBeanNotificationInfo info = new MBeanNotificationInfo(types, ProcessContext.class.getName(), "ProcessContext has changed");
+		return new MBeanNotificationInfo[] { info };
+	}
+
+	@Override
+	public void registerMBean(MBeanServer mbeanServer) throws Exception {
+		ObjectName mbeanName = new ObjectName("shiva2.core:type=ProcessContext");
+		mbeanServer.registerMBean(this, mbeanName);
 	}
 }

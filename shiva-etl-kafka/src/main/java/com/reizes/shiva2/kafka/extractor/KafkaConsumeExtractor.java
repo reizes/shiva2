@@ -6,10 +6,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -23,13 +26,13 @@ import com.reizes.shiva2.core.AfterProcessAware;
 import com.reizes.shiva2.core.ExecutionStatus;
 import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.context.ProcessContextAware;
-import com.reizes.shiva2.core.extractor.AbstractExtractor;
+import com.reizes.shiva2.management.AbstractNotificatableExtractor;
+import com.reizes.shiva2.management.Managable;
 
-public class KafkaConsumeExtractor extends AbstractExtractor implements ConsumerRebalanceListener, AfterProcessAware, ProcessContextAware {
+public class KafkaConsumeExtractor extends AbstractNotificatableExtractor implements KafkaConsumeExtractorMBean, Managable, ConsumerRebalanceListener, AfterProcessAware, ProcessContextAware {
 
+	private KafkaConsumeExtractorStatus status = new KafkaConsumeExtractorStatus();
 	private KafkaConsumer<String, String> consumer;
-	private String topic;
-	private String messageKey;
 	private long pollingTimeout = 1000*5; // 5 seconds
 	private int threadJobQueueCapacity = 100;
 	private ProcessContext context;
@@ -37,65 +40,23 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 	private KafkaOffsetListener kafkaOffsetListener;
 	private PollingTimeoutListener pollingTimeoutListener;
 	private OffsetStorage offsetStorage;
-	//private MessageProcessThread thread;
 	private AtomicBoolean isContinueConsume = new AtomicBoolean(true);
 	private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> currentOffset = new ConcurrentHashMap<>();
 	private List<Integer> assignPartitions;
 
 	public KafkaConsumeExtractor(Map<java.lang.String, java.lang.Object> configs) {
 		consumer = new KafkaConsumer<>(configs);
-		topic = (String) configs.get("topic");
-		messageKey = (String) configs.get("messageKey");
+		status.setConsumeTopic((String) configs.get("topic"));
+		status.setConsumeMessageKey((String) configs.get("messageKey"));
 		addShutdownHook();
 	}
 
 	public KafkaConsumeExtractor(Properties properties) {
 		consumer = new KafkaConsumer<>(properties);
-		topic = properties.getProperty("topic");
-		messageKey = properties.getProperty("messageKey");
+		status.setConsumeTopic(properties.getProperty("topic"));
+		status.setConsumeMessageKey(properties.getProperty("messageKey"));
 		addShutdownHook();
 	}
-	
-	/*private class MessageProcessThread extends Thread {
-		private LinkedBlockingQueue<ConsumerRecord<String, String>> queue;
-		private AtomicBoolean isContinue = new AtomicBoolean(true);
-		
-		public MessageProcessThread(int queueCapacity) {
-			queue = new LinkedBlockingQueue<ConsumerRecord<String, String>>(queueCapacity);
-		}
-		
-		@Override
-		public void run() {
-			long count = 0;
-			do {
-				try {
-					ConsumerRecord<String, String> record = queue.take();
-					if (record==null) {
-						continue;
-					}
-					String key = record.key();
-					String value = record.value();
-					if (messageKey == null || messageKey.equals(key)) {
-						startProcessItem(value);
-					}
-					count++;
-					if (count%100 == 0) {
-						commit();
-						count = 0;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				if (context.getExecutionStatus() == ExecutionStatus.STOP) break;
-			} while(isContinue.get());
-			try {
-				queue.clear();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
-	}*/
 	
 	private void addShutdownHook() {
 		final Thread mainThread = Thread.currentThread();
@@ -103,20 +64,16 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
         // Registering a shutdown hook so we can exit cleanly
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
+            	status.setStatus("Starting exit");
                 System.out.println("Starting exit...");
-                //thread.isContinue.set(false);
                 isContinueConsume.set(false);
                 context.setExecutionStatus(ExecutionStatus.STOP);
-                /*try {
-					thread.queue.put(new ConsumerRecord<String, String>("topic",0 ,0l, "",""));
-				} catch (InterruptedException e1) {
-					e1.printStackTrace();
-				}*/
-                // Note that shutdownhook runs in a separate thread, so the only thing we can safely do to a consumer is wake it up
                 consumer.wakeup();
                 try {
+                	status.setStatus("Wait join");
                 	System.out.println("wait join...");
                     mainThread.join();
+                	status.setStatus("Exited");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -129,6 +86,7 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 			consumer.commitSync(currentOffset);
 			saveOffset(currentOffset.keySet(), currentOffset);
 		} catch(CommitFailedException e) {
+			sendNotification(e);
             System.out.println(e.getMessage());
             e.printStackTrace();
 		}
@@ -155,36 +113,41 @@ public class KafkaConsumeExtractor extends AbstractExtractor implements Consumer
 
 	@Override
 	public Object doProcess(Object input) throws Exception {
-		/*if (thread == null) {
-			thread = new MessageProcessThread(threadJobQueueCapacity);
-			thread.start();
-		}*/
-		
 		try {
 			if (assignPartitions != null) {
 				List<TopicPartition> partitions = new ArrayList<>();
 				for(Integer partition : assignPartitions) {
-					partitions.add(new TopicPartition(topic, partition));
+					partitions.add(new TopicPartition(status.getConsumeTopic(), partition));
 				}
 				consumer.assign(partitions);
 				seek(partitions);
 			} else {
-				consumer.subscribe(Arrays.asList(topic), this);
+				consumer.subscribe(Arrays.asList(status.getConsumeTopic()), this);
 				consumer.poll(0);
 				seek(consumer.assignment());
 			}
+			status.setStatus("Start consumer");
+			String consumeMessageKey = status.getConsumeMessageKey();
 			long count = 0;
 polling: 
 			while (isContinueConsume.get()) {
 				ConsumerRecords<String, String> records = consumer.poll(pollingTimeout);
 				
 				if (pollingTimeoutListener!=null && (records==null || records.count()==0)) {
+					status.setStatus("POLLING TIMEOUT");
 					pollingTimeoutListener.onPollingTimeout();
 					continue;
 				}
 				
+				status.setStatus("MESSAGE RECEIVED");
 				for (ConsumerRecord<String, String> record : records) {
 					currentOffset.put(new TopicPartition(record.topic(), record.partition()), new OffsetAndMetadata(record.offset()));
+					status.setTopic(record.topic());
+					status.getPartitions().add(record.partition());
+					status.setOffset(record.offset());
+					status.setMessageKey(record.key());
+					status.setMessage(record.value());
+					//System.out.println(record.topic()+"-"+record.partition()+":"+record.offset()+" "+record.key());
 					
 					if (kafkaOffsetListener!=null) {
 						kafkaOffsetListener.setOffsetAndRecord(record.topic(), record.partition(), record.offset(), record.value());
@@ -202,7 +165,7 @@ polling:
 						//this.thread.queue.put(record);
 						String key = record.key();
 						String value = record.value();
-						if (messageKey == null || messageKey.equals(key)) {
+						if (consumeMessageKey == null || consumeMessageKey.equals(key)) {
 							startProcessItem(value);
 						}
 						count++;
@@ -216,8 +179,10 @@ polling:
 				count = 0;
 				if (context.getExecutionStatus() == ExecutionStatus.STOP) break;
 			}
+			status.setStatus("Exit Consumer Loop");
 		} catch (WakeupException e) {
             // ignore for shutdown
+			sendNotification(e);
         } finally {
 			try {
 		        consumer.commitSync();
@@ -233,20 +198,20 @@ polling:
 	}
 
 	public String getTopic() {
-		return topic;
+		return status.getTopic();
 	}
 
 	public KafkaConsumeExtractor setTopic(String topic) {
-		this.topic = topic;
+		this.status.setTopic(topic);
 		return this;
 	}
 
 	public String getMessageKey() {
-		return messageKey;
+		return status.getMessageKey();
 	}
 
 	public KafkaConsumeExtractor setMessageKey(String messageKey) {
-		this.messageKey = messageKey;
+		status.setMessageKey(messageKey);
 		return this;
 	}
 
@@ -284,7 +249,6 @@ polling:
 	@Override
 	public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
 		commit();
-		//commitDBTransaction();
 	}
 
 	@Override
@@ -322,6 +286,51 @@ polling:
 	public KafkaConsumeExtractor setAssignPartitions(List<Integer> assignPartitions) {
 		this.assignPartitions = assignPartitions;
 		return this;
+	}
+
+	@Override
+	public String getStatus() {
+		return status.getStatus();
+	}
+
+	@Override
+	public long getOffset() {
+		return status.getOffset();
+	}
+
+	@Override
+	public String getPartitions() {
+		return StringUtils.join(status.getPartitions().toArray(), ',');
+	}
+
+	@Override
+	public String getMessage() {
+		return status.getMessage();
+	}
+
+	@Override
+	public String getConsumeTopic() {
+		return status.getConsumeTopic();
+	}
+
+	@Override
+	public String getConsumeMessageKey() {
+		return status.getConsumeMessageKey();
+	}
+
+	@Override
+	public void stopConsumer() {
+    	status.setStatus("Starting exit");
+        System.out.println("Starting exit...");
+        isContinueConsume.set(false);
+        context.setExecutionStatus(ExecutionStatus.STOP);
+        consumer.wakeup();
+	}
+
+	@Override
+	public void registerMBean(MBeanServer mbeanServer) throws Exception{
+		ObjectName mbeanName = new ObjectName("shiva2.kafka:type=KafkaConsumeExtractor");
+		mbeanServer.registerMBean(this, mbeanName);
 	}
 
 }

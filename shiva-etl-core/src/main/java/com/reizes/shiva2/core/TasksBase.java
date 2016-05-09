@@ -3,11 +3,15 @@ package com.reizes.shiva2.core;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.management.MBeanServer;
+
 import com.reizes.shiva2.core.context.NullContextException;
 import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.context.ProcessContextAware;
+import com.reizes.shiva2.management.AbstractNotificatableTask;
+import com.reizes.shiva2.management.Managable;
 
-public abstract class TasksBase implements Task, TasksHolder, ProcessContextAware {
+public abstract class TasksBase extends AbstractNotificatableTask implements Managable, Task, TasksHolder, ProcessContextAware {
 	private BeforeItemProcessListener beforeItemProcessListener;
 	private AfterItemProcessListener afterItemProcessListener;
 	private ExceptionListener exceptionListener;
@@ -213,6 +217,17 @@ public abstract class TasksBase implements Task, TasksHolder, ProcessContextAwar
 
 	public synchronized void setShareProcessContext(boolean shareProcessContext) {
 		this.shareProcessContext = shareProcessContext;
+	}
+
+	@Override
+	public void registerMBean(MBeanServer mbeanServer) throws Exception{
+		if (this.elementList != null) {
+			for (Task task : this.elementList) {
+				if (task instanceof Managable) {
+					((Managable) task).registerMBean(mbeanServer);
+				}
+			}
+		}
 	}
 
 }

@@ -1,6 +1,10 @@
 package com.reizes.shiva2.core;
 
+import java.lang.management.ManagementFactory;
 import java.util.List;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.context.ProcessContextAware;
@@ -9,8 +13,9 @@ import com.reizes.shiva2.core.extractor.Extractor;
 import com.reizes.shiva2.core.filter.AbstractFilter;
 import com.reizes.shiva2.core.loader.AbstractLoader;
 import com.reizes.shiva2.core.task.AbstractTask;
+import com.reizes.shiva2.management.Managable;
 
-public class TasksProcessor extends TasksBase implements ExtractedItemHandler, BeforeProcessAware, AfterProcessAware {
+public class TasksProcessor extends TasksBase implements TasksProcessorMBean, ExtractedItemHandler, BeforeProcessAware, AfterProcessAware {
 	private Extractor extractor;
 	private BeforeProcessListener beforeProcessListener;
 	private AfterProcessListener afterProcessListener;
@@ -40,6 +45,7 @@ public class TasksProcessor extends TasksBase implements ExtractedItemHandler, B
 
 	@Override
 	public Object doProcess(Object input) throws Exception {
+		registerMBean();
 		propagateListener();
 
 		if (this.extractor != null) {
@@ -54,9 +60,8 @@ public class TasksProcessor extends TasksBase implements ExtractedItemHandler, B
 			}
 			if (this.context.getProcessStatus() == ProcessStatus.RUNNING) {
 				try {
-					if (!isShareProcessAware()) {
-						callBeforeProcessAwareSub(this.context, input);
-					}
+					//this.onBeforeProcess(this.context, input);
+					callBeforeProcessAwareSub(this.context, input);
 
 					if (this.context.getProcessStatus() == ProcessStatus.RUNNING) {
 						output = this.extractor.doProcess(input);
@@ -88,6 +93,7 @@ public class TasksProcessor extends TasksBase implements ExtractedItemHandler, B
 				this.afterProcessListener.onAfterProcess(this.context, output);
 			}
 			if (rethrow != null) {
+				sendNotification(rethrow);
 				throw rethrow;
 			}
 
@@ -234,6 +240,8 @@ public class TasksProcessor extends TasksBase implements ExtractedItemHandler, B
 		if (isShareProcessAware()) {
 			callBeforeProcessAwareSub(this.context, this.context.getProcessParameter());
 		}
+		
+		registerMBean();
 	}
 
 	public boolean isShareProcessAware() {
@@ -243,5 +251,21 @@ public class TasksProcessor extends TasksBase implements ExtractedItemHandler, B
 	public TasksProcessor setShareProcessAware(boolean shareProcessAware) {
 		this.shareProcessAware = shareProcessAware;
 		return this;
+	}
+	
+	public void registerMBean() throws Exception {
+		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+		this.registerMBean(mbs);
+		if (this.extractor!=null && this.extractor instanceof Managable) {
+			((Managable)this.extractor).registerMBean(mbs);
+		}
+	}
+
+	@Override
+	public void registerMBean(MBeanServer mbeanServer) throws Exception {
+		ObjectName mbeanName = new ObjectName("shiva2.core:type=TasksProcessor");
+		mbeanServer.registerMBean(this, mbeanName);
+		this.context.registerMBean(mbeanServer);
+		super.registerMBean(mbeanServer);
 	}
 }
