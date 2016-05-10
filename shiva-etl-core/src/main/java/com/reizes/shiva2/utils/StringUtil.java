@@ -154,11 +154,6 @@ public class StringUtil {
 		return in.replaceAll("</?[^>]+>", "");
 	}
 
-	/**
-	 * in에서 dash를 제거하고 각 dash의 앞 글자를 대문자로 하여 camel화 함
-	 * @param in - string
-	 * @return camel String
-	 */
 	public static String camelize(String in) {
 		String camel = StringUtils.replaceChars(WordUtils.capitalizeFully(in, new char[] {'_', '-', '.'}), "_-.", null);
 		return StringUtils.uncapitalize(camel);
@@ -180,19 +175,10 @@ public class StringUtil {
 		return sb.toString();
 	}
 
-	/**
-	 * 주어진 이름을 클래스 이름으로 변환
-	 * @param in - 이름
-	 * @return - 클래스 이름
-	 */
 	public static String beanNamelize(String in) {
 		return StringUtils.replaceChars(WordUtils.capitalizeFully(in, new char[] {'_', '-', '.'}), "_-.", null);
 	}
 
-	/**
-	 * @param data - 입력 스트링
-	 * @return String - 정제된 스트링
-	 */
 	public static String normalize(String data) {
 		data = StringUtils.remove(data, '\u0000'); // 2012.11.22 \u0000도 제거
 		data = StringUtils.strip(data, " \t　"); // 2012.10.4 ㄱ+한자+1 특수기호 공백도 제거
@@ -203,10 +189,6 @@ public class StringUtil {
 		return StringUtils.trim(data);
 	}
 
-	/**
-	 * @param data String
-	 * @return XML에 허용되지 않는 제어 문자를 제거한다.
-	 */
 	public static String removeInvalidXmlChar(String data) {
 		if (StringUtils.isBlank(data))
 			return null;
@@ -214,13 +196,6 @@ public class StringUtil {
 		return data.replaceAll("[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]", "");
 	}
 
-	/**
-	 * 지정 글자가 넘어가는 경우 자른다.
-	 * 2.1.1 2012.7.5 reizes
-	 * @param data
-	 * @param length
-	 * @return
-	 */
 	public static String truncate(String data, int length) {
 		if (data != null) {
 			return data.length() > length ? data.substring(0, length) : data;

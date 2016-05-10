@@ -1,6 +1,5 @@
 package com.reizes.shiva2.core.task;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
 import com.reizes.shiva2.core.Task;
@@ -8,9 +7,9 @@ import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.context.ProcessContextAware;
 
 /**
- * 지정 카운트마다 처리 중인 숫자를 기록
+ * Log processed item count 
  * @author reizes
- * @since 2.0.2
+ * @since 0.2.0
  * @since 2010.5.4
  */
 public class LogProcessCount implements Task, ProcessContextAware {
@@ -37,9 +36,9 @@ public class LogProcessCount implements Task, ProcessContextAware {
 	}
 
 	/**
-	 * @param input
-	 * @return
-	 * @throws Exception
+	 * @param input Input Object
+	 * @return Input Object (bypass)
+	 * @throws Exception Exception object
 	 * @see com.reizes.shiva2.core.Task#doProcess(java.lang.Object)
 	 */
 	@Override
@@ -60,7 +59,7 @@ public class LogProcessCount implements Task, ProcessContextAware {
 	}
 
 	/**
-	 * @param context
+	 * @param context ProcessContext for this processor
 	 * @see com.reizes.shiva2.core.context.ProcessContextAware#setProcessContext(com.reizes.shiva2.core.context.ProcessContext)
 	 */
 	@Override

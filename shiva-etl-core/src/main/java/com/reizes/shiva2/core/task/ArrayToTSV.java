@@ -10,10 +10,10 @@ public class ArrayToTSV extends AbstractTask {
 	private String delimiter = "\t";
 
 	/**
-	 * Map<String,Object> to TSV Transformer
-	 * @param input - Map<String,Object> 
-	 * @return - String TSV
-	 * @throws Exception -
+	 * Map&lt;String,Object&gt; to TSV Transformer
+	 * @param input - Map&lt;String,Object&gt;
+	 * @return String TSV
+	 * @throws Exception Exception Object
 	 * @see com.reizes.shiva2.core.Task#doProcess(java.lang.Object)
 	 */
 	@Override

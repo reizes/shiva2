@@ -9,14 +9,14 @@ import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 
 /**
- * Bean 관련 유틸리티 모음
+ * Utility Functions for Bean
  * @author reizes
  * @since 2009.9.23
  * @since 2010.1.26
  */
 public class BeanUtil {
 	/**
-	 * convert하지 않는 클래스는 이 인터페이스를 상속한다.
+	 * Should implement this interface to not convert
 	 * @author reizes
 	 * @since 2010.1.26
 	 */
@@ -24,11 +24,11 @@ public class BeanUtil {
 	}
 
 	/**
-	 * Number로 입력된 데이터를 지정 타입으로 캐스팅 한다.
-	 * 2010.1.26 apache의 ConvertUtils를 사용하는 것으로 변경
-	 * @param input - Number
-	 * @param targetType - Class<?> 캐스팅할 타입
-	 * @return - Object
+	 * Cast Number to input type
+	 * 2010.1.26 using apache common ConvertUtils
+	 * @param input Number
+	 * @param targetType Class&lt;?&gt; Target type to cast
+	 * @return Object
 	 */
 	public static Object numberCast(Object input, Class<?> targetType) {
 		return ConvertUtils.convert(input, targetType);
@@ -36,12 +36,9 @@ public class BeanUtil {
 
 	/**
 	 * 2010.1.26
-	 * Map<String, Object> data로부터 bean을 세팅한다. data의 key는 _로 구분되어 있을 경우 camelize한다.
-	 * @param bean - 세팅할 bean
-	 * @param data - Map
-	 * @throws IllegalAccessException -
-	 * @throws InvocationTargetException -
-	 * @throws NoSuchMethodException -
+	 * Set properties of input Bean using Map&lt;String, Object&gt;. If the key of map is snaked, change it using camel convention.
+	 * @param bean Bean object to set
+	 * @param data Data Map
 	 */
 	public static void setFromMap(Object bean, Map<String, ?> data) throws IllegalAccessException,
 		InvocationTargetException,
@@ -62,15 +59,10 @@ public class BeanUtil {
 	}
 
 	/**
-	 * obj를 class 로 변경시켜 프로퍼티를 복사한다.
-	 * @param <T> - 리턴할 클래스 
-	 * @param cls - 리턴할 클래스
-	 * @param obj - 변경할 개체
-	 * @return - T로 지정된 클래스
-	 * @throws InstantiationException
-	 * @throws IllegalAccessException
-	 * @throws InvocationTargetException
-	 * @throws NoSuchMethodException
+	 * Copy properties of input Object using input Class.
+	 * @param cls Class to return
+	 * @param obj input Object
+	 * @return Class what has type cls
 	 */
 	public static Object changeClass(Class<?> cls, Object obj) throws InstantiationException,
 		IllegalAccessException,
@@ -90,13 +82,6 @@ public class BeanUtil {
 		return retObj;
 	}
 
-	/**
-	 * String->Date의 경우 별도의 Date.parse를 사용하고 그렇지 않은 경우 apache의 convert를 사용한다.
-	 * @param value
-	 * @param targetType
-	 * @return
-	 * @since 2.1.5
-	 */
 	public static Object convert(Object value, Class<?> targetType) {
 		if (Date.class.equals(targetType) && value.getClass().equals(String.class)) { // String을 Date로 컨버트 하는 경우
 			return DateUtil.parse((String)value);

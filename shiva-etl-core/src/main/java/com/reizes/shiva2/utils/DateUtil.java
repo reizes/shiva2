@@ -7,7 +7,7 @@ import org.apache.commons.lang3.time.DateUtils;
 
 /**
  * @author reizes
- * @since 2.1.0
+ * @since 0.2.0
  */
 public class DateUtil {
 	public static Date min(Date d1, Date d2) {
@@ -31,10 +31,10 @@ public class DateUtil {
 	}
 
 	/**
-	 * 미리 정의된 패턴으로 날짜 스트링 파싱
-	 * @param data
-	 * @return Date
-	 * @since 2.1.5
+	 * parse the string using typical datetime format
+	 * @param data date string
+	 * @return Date Date object
+	 * @since 0.2.0
 	 */
 	public static Date parse(String data) {
 		try {

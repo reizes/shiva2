@@ -3,13 +3,13 @@
 	<parent>
 		<artifactId>shiva2-common</artifactId>
 		<groupId>com.reizes.shiva2</groupId>
-		<version>0.2.0-SNAPSHOT</version>
+		<version>0.2.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.reizes.shiva2</groupId>
 	<artifactId>shiva2-kafka</artifactId>
 	<name>shiva kafka</name>
-	<version>0.2.0-SNAPSHOT</version>
+	<version>0.2.0</version>
 	<description>Shiva Kafka Support Library 2016 reizes</description>
 	<dependencies>
 		<dependency>

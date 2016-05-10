@@ -15,7 +15,6 @@ public interface TypeHandler {
 
 	/**
 	 * db type에서 value 반환
-	 * @param data
 	 * @param dbValue
 	 */
 	public Object dbToUserType(Object dbValue);

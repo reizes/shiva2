@@ -181,8 +181,8 @@ public class TasksProcessor extends TasksBase implements TasksProcessorMBean, Ex
 
 	/**
 	 * return extractor
-	 * @since 2.1.0 EtlElement -> Extractor로 변경 
-	 * @return
+	 * @since 0.2.0 change EtlElement to Extractor 
+	 * @return Extractor object
 	 */
 	public Extractor getExtractor() {
 		return extractor;
@@ -215,10 +215,10 @@ public class TasksProcessor extends TasksBase implements TasksProcessorMBean, Ex
 	}
 
 	/**
-	 * 2013.1.23 상위 프로세스 이벤트를 수신할지 여부에 따라 호출됨
-	 * @param context
-	 * @param data
-	 * @throws Exception
+	 * 2013.1.23 Will be called if this processor can receive parent's event.
+	 * @param context ProcessContext for current processor
+	 * @param data Data object for current process
+	 * @throws Exception Exception object
 	 * @see com.reizes.shiva2.core.AfterProcessAware#onAfterProcess(com.reizes.shiva2.core.context.ProcessContext, java.lang.Object)
 	 */
 	@Override
@@ -229,10 +229,10 @@ public class TasksProcessor extends TasksBase implements TasksProcessorMBean, Ex
 	}
 
 	/**
-	 * 2013.1.23 상위 프로세스 이벤트를 수신할지 여부에 따라 호출됨
-	 * @param context
-	 * @param data
-	 * @throws Exception
+	 * 2013.1.23 Will be called if this processor can receive parent's event.
+	 * @param context ProcessContext for current processor
+	 * @param data Data object for current process
+	 * @throws Exception Exception Exception object
 	 * @see com.reizes.shiva2.core.BeforeProcessAware#onBeforeProcess(com.reizes.shiva2.core.context.ProcessContext, java.lang.Object)
 	 */
 	@Override

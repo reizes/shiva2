@@ -7,17 +7,17 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Collection 관련 유용한 유틸리티들
+ * Collection Utilities
  * @author reizes
  * @since 2009.10.14
- * @since 2010.6.7 Object -> Generic으로 변경
- * @since 2.1.0 -> toMap method 추가
+ * @since 2010.6.7 change Object to Generic
+ * @since 0.2.0
  */
 public class CollectionUtil {
 	/**
-	 * object array를 Set<Object>로 변환하여 반환
-	 * @param array - 입력 배열
-	 * @return - Set<Object>
+	 * object array를 Set&lt;Object&gt;로 변환하여 반환
+	 * @param array Input Array
+	 * @return - Set&lt;Object&gt;
 	 */
 	public static <T> Set<T> toSet(T[] array) {
 		HashSet<T> set = new HashSet<T>();
@@ -32,11 +32,11 @@ public class CollectionUtil {
 	}
 
 	/**
-	 * toSet과 같으나 중복 요소는 없도록 한다.
+	 * same toSet but this will remove duplicated value
 	 * 2012.10.31
 	 * @since 2.1.5
-	 * @param array
-	 * @return
+	 * @param array Input Array
+	 * @return Set&lt;Object&gt;
 	 */
 	public static <T> Set<T> toUniqueSet(T[] array) {
 		HashSet<T> set = new HashSet<T>();
@@ -53,13 +53,7 @@ public class CollectionUtil {
 	}
 
 	/**
-	 * key, value의 array를 map으로 변경
-	 * @param <K>
-	 * @param <V>
-	 * @param keys
-	 * @param values
-	 * @return
-	 * @since 2.1.0
+	 * Change arrays of key and value to Map
 	 */
 	public static <K, V> Map<K, V> toMap(K[] keys, V[] values) {
 		HashMap<K, V> map = new HashMap<K, V>();
@@ -74,10 +68,10 @@ public class CollectionUtil {
 	}
 
 	/**
-	 * 두 Collection을 union 하여 set으로 반환
-	 * @param set1 - Collection
-	 * @param set2 - Collection
-	 * @return - Union된 Set<Object>
+	 * Union two collections and return Set
+	 * @param set1 Collection1
+	 * @param set2 Collection2
+	 * @return Union Set&lt;Object&gt;
 	 */
 	public static <T> Set<T> union(Collection<T> set1, Collection<T> set2) {
 		HashSet<T> set = new HashSet<T>();
@@ -95,10 +89,10 @@ public class CollectionUtil {
 	}
 
 	/**
-	 * dest와 src를 union하여 dest를 반환
-	 * @param dest - Set<Object>
-	 * @param src - Collection
-	 * @return - src와 union된 dest
+	 * Merge src to dest
+	 * @param dest Set&lt;Object&gt;
+	 * @param src Collection
+	 * @return dest merged with src
 	 */
 	public static <T> Set<T> unionTo(Set<T> dest, Collection<T> src) {
 		for (T object : src) {
@@ -111,10 +105,10 @@ public class CollectionUtil {
 	}
 
 	/**
-	 * 두 Collection을 intersect 하여 set으로 반환
-	 * @param set1 - Collection
-	 * @param set2 - Collection
-	 * @return - intersect된 Set<Object>
+	 * return intersection of two collections
+	 * @param set1 Collection1
+	 * @param set2 Collection2
+	 * @return - intersection as Set&lt;Object&gt;
 	 */
 	public static <T> Set<T> intersect(Collection<T> set1, Collection<T> set2) {
 		HashSet<T> set = new HashSet<T>();

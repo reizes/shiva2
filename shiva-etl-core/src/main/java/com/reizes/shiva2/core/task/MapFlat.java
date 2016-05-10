@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * multi depth map을 delimiter로 붙인 이름으로 된 single depth map으로 변환한다.
+ * change multi depth map to single depth map with joined name using delimiter
  * @author reizes
- * @since 2.1.1
+ * @since 0.2.0
  */
 public class MapFlat extends AbstractTask {
 	private String delimiter = "."; // default는 .
@@ -29,9 +29,9 @@ public class MapFlat extends AbstractTask {
 	}
 
 	/**
-	 * @param input
-	 * @return
-	 * @throws Exception
+	 * @param input Multi depth map
+	 * @return flatten map
+	 * @throws Exception Exception Object
 	 * @see com.reizes.shiva2.core.Task#doProcess(java.lang.Object)
 	 */
 	@SuppressWarnings("unchecked")

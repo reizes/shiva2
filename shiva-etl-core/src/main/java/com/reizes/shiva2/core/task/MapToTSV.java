@@ -5,10 +5,9 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Map<String,Object> to TSV Transformer
+ * Map&lt;String,Object&gt; to TSV Transformer
  * @author reizes
- * @since 2009.9.17 - outputTitle 추가
- * @since 2.1.0 - delimiter 지정 추가
+ * @since 0.2.0
  */
 public class MapToTSV extends AbstractTask {
 	String[] columns;
@@ -17,10 +16,10 @@ public class MapToTSV extends AbstractTask {
 	private String delimiter = "\t";
 
 	/**
-	 * Map<String,Object> to TSV Transformer
-	 * @param input - Map<String,Object> 
-	 * @return - String TSV
-	 * @throws Exception -
+	 * Map&lt;String,Object&gt; to TSV Transformer
+	 * @param input Map&lt;String,Object&gt;
+	 * @return String TSV
+	 * @throws Exception Object 
 	 * @see com.reizes.shiva2.core.Task#doProcess(java.lang.Object)
 	 */
 	@SuppressWarnings("unchecked")

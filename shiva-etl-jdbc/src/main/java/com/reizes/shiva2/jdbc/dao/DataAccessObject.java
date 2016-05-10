@@ -33,7 +33,7 @@ import com.reizes.shiva2.utils.StringUtil;
  * 4. 리턴 클래스는 반드시 디폴트 생성자가 있어야 한다.
  * 5. 기타 타입의 클래스를 사용할 경우 타입 핸들러가 등록되어 있지 않으면 기본으로 toString 값이 사용된다.
  * 6. 필요한 경우에는 TypeHandler를 구현해서 사용한다.
- * 7. 리턴 클래스의 경우 명시적으로 입력하지 않는 경우 Map<String, Object>가 기본으로 사용된다.
+ * 7. 리턴 클래스의 경우 명시적으로 입력하지 않는 경우 Map&lt;String, Object&gt;가 기본으로 사용된다.
  * 8. RowHandler를 사용할 경우 반드시 streamResultMode를 true로 설정한다.
  * </pre>
  * @author inho
@@ -159,7 +159,7 @@ public class DataAccessObject {
 	/**
 	 * 하나의 결과 값을 갖는 SQL문을 실행한다. (2개 이상의 값이 나올 경우 null이 리턴된다.)
 	 * @param query SQL문
-	 * @return Map<String, Object> 형태의 결과 값
+	 * @return Map&lt;String, Object&gt; 형태의 결과 값
 	 * @throws Exception -
 	 */
 	public Map<String, Object> executeSelectSingle(String query) throws Exception {
@@ -170,7 +170,7 @@ public class DataAccessObject {
 	 * 하나의 결과 값을 갖는 SQL문을 실행한다. (2개 이상의 값이 나올 경우 null이 리턴된다.)
 	 * @param query SQL문
 	 * @param param SQL 파라미터
-	 * @return Map<String, Object> 형태의 결과 값
+	 * @return Map&lt;String, Object&gt; 형태의 결과 값
 	 * @throws Exception -
 	 */
 	@SuppressWarnings("unchecked")
@@ -241,7 +241,7 @@ public class DataAccessObject {
 	/**
 	 * 하나 이상의 결과 값을 갖는 SQL문을 실행한다.
 	 * @param query SQL문
-	 * @return Map<String, Object> 형태의 결과 값 리스트
+	 * @return Map&lt;String, Object&gt; 형태의 결과 값 리스트
 	 * @throws Exception -
 	 */
 	public List<Map<String, Object>> executeSelect(String query) throws Exception {
@@ -252,7 +252,7 @@ public class DataAccessObject {
 	 * 하나 이상의 결과 값을 갖는 SQL문을 실행한다.
 	 * @param query SQL문
 	 * @param param SQL 파라미터
-	 * @return Map<String, Object> 형태의 결과 값 리스트
+	 * @return Map&lt;String, Object&gt; 형태의 결과 값 리스트
 	 * @throws Exception -
 	 */
 	@SuppressWarnings("unchecked")
