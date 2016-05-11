@@ -103,7 +103,7 @@ public class RestClient {
 
 			StatusLine statusLine = httpResponse.getStatusLine();
 			restClientResponse.setResponseCode(statusLine.getStatusCode());
-			if (statusLine.getStatusCode() != 200) {
+			if (statusLine.getStatusCode() != 200 && statusLine.getStatusCode() != 204) {
 				log.error(requestUri+" "+method.name()+"\n"+statusLine.toString()+"\n"+requestEntity.toString());
 			}
 			Header[] responseHeaders = httpResponse.getAllHeaders();
