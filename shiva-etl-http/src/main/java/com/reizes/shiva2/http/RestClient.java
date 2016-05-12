@@ -39,8 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @Slf4j
 public class RestClient {
-	URI uri;
-	Gson gson = new Gson();
+	private URI uri;
+	private Gson gson = new Gson();
+	private boolean chunked = true;
 
 	public enum Method {
 		GET, PUT, POST, DELETE;
@@ -85,7 +86,7 @@ public class RestClient {
 				requestBase = new HttpGet(requestUri);
 				break;
 			}
-
+			
 			log.debug("executing request to " + target + requestUri);
 
 			if (headers != null) {
@@ -93,7 +94,7 @@ public class RestClient {
 					requestBase.addHeader(key, headers.get(key));
 				}
 			}
-
+			
 			HttpResponse httpResponse = httpclient.execute(target, requestBase);
 			HttpEntity entity = httpResponse.getEntity();
 			if (entity != null) {
@@ -103,8 +104,9 @@ public class RestClient {
 
 			StatusLine statusLine = httpResponse.getStatusLine();
 			restClientResponse.setResponseCode(statusLine.getStatusCode());
+			restClientResponse.setStatusText(statusLine.toString());
 			if (statusLine.getStatusCode() != 200 && statusLine.getStatusCode() != 204) {
-				log.error(requestUri+" "+method.name()+"\n"+statusLine.toString()+"\n"+requestEntity.toString());
+				log.error(requestUri+" "+method.name()+"\t"+statusLine.toString()+"\t"+requestEntity.toString());
 			}
 			Header[] responseHeaders = httpResponse.getAllHeaders();
 			for (int i = 0; i < responseHeaders.length; i++) {
@@ -150,25 +152,35 @@ public class RestClient {
 		return request(Method.POST, requestUri, headers, entity);
 	}
 
-	public RestClientResponse postString(String requestUri, String body) throws IOException {
-		return request(Method.POST, requestUri, null, new StringEntity(body, Consts.UTF_8));
-	}
-
 	public RestClientResponse postString(String requestUri, Map<String, String> headers, String body) throws IOException {
-		return request(Method.POST, requestUri, headers, new StringEntity(body, Consts.UTF_8));
+		StringEntity entity = new StringEntity(body, Consts.UTF_8);
+		entity.setChunked(chunked);
+		return request(Method.POST, requestUri, headers, entity);
 	}
 
-	public RestClientResponse postJson(String requestUri, Map<String, Object> jsonData) throws IOException {
+	public RestClientResponse postString(String requestUri, String body) throws IOException {
+		return postString(requestUri, null, body);
+	}
+
+	public RestClientResponse postJsonString(String requestUri, String jsonData) throws IOException {
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("Content-Type", "Application/json");
-		return request(Method.POST, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
+		return postString(requestUri, headers, gson.toJson(jsonData));
 	}
 
-	public RestClientResponse postJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
+	public RestClientResponse postJsonString(String requestUri, Map<String, String> headers, String jsonData) throws IOException {
 		if (headers!=null && !headers.containsKey("Content-Type")) {
 			headers.put("Content-Type", "Application/json");
 		}
-		return request(Method.POST, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
+		return postString(requestUri, headers, gson.toJson(jsonData));
+	}
+
+	public RestClientResponse postJson(String requestUri, Map<String, Object> jsonData) throws IOException {
+		return postJsonString(requestUri,gson.toJson(jsonData));
+	}
+
+	public RestClientResponse postJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
+		return postJsonString(requestUri, headers, gson.toJson(jsonData));
 	}
 
 	public RestClientResponse postFormParams(String requestUri, Map<String, String> params) throws IOException {
@@ -208,25 +220,35 @@ public class RestClient {
 		return request(Method.PUT, requestUri, headers, entity);
 	}
 
-	public RestClientResponse putString(String requestUri, String body) throws IOException {
-		return request(Method.PUT, requestUri, null, new StringEntity(body, Consts.UTF_8));
-	}
-
 	public RestClientResponse putString(String requestUri, Map<String, String> headers, String body) throws IOException {
-		return request(Method.PUT, requestUri, headers, new StringEntity(body, Consts.UTF_8));
+		StringEntity entity = new StringEntity(body, Consts.UTF_8);
+		entity.setChunked(chunked);
+		return request(Method.PUT, requestUri, headers, entity);
 	}
 
-	public RestClientResponse putJson(String requestUri, Map<String, Object> jsonData) throws IOException {
+	public RestClientResponse putString(String requestUri, String body) throws IOException {
+		return putString(requestUri, null, body);
+	}
+
+	public RestClientResponse putJsonString(String requestUri, String jsonData) throws IOException {
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("Content-Type", "Application/json");
-		return request(Method.PUT, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
+		return putString(requestUri, headers, jsonData);
 	}
 
-	public RestClientResponse putJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
+	public RestClientResponse putJsonString(String requestUri, Map<String, String> headers, String jsonData) throws IOException {
 		if (headers!=null && !headers.containsKey("Content-Type")) {
 			headers.put("Content-Type", "Application/json");
 		}
-		return request(Method.PUT, requestUri, headers, new StringEntity(gson.toJson(jsonData), Consts.UTF_8));
+		return putString(requestUri, headers, jsonData);
+	}
+
+	public RestClientResponse putJson(String requestUri, Map<String, Object> jsonData) throws IOException {
+		return putJsonString(requestUri, gson.toJson(jsonData));
+	}
+
+	public RestClientResponse putJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
+		return putJsonString(requestUri, headers, gson.toJson(jsonData));
 	}
 
 	public RestClientResponse putFormParams(String requestUri, Map<String, String> params) throws IOException {

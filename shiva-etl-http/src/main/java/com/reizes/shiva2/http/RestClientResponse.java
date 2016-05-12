@@ -10,6 +10,7 @@ import lombok.Data;
 public class RestClientResponse implements Closeable {
 	private InputStream response;
 	private int responseCode;
+	private String statusText;
 	
 	public void close() throws IOException {
 		if (response != null) {
