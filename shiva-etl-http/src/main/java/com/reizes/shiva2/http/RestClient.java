@@ -158,21 +158,23 @@ public class RestClient {
 		return request(Method.POST, requestUri, headers, entity);
 	}
 
+	public RestClientResponse postString(String requestUri, Map<String, String> headers, String body, String contentType) throws IOException {
+		StringEntity entity = new StringEntity(body, Consts.UTF_8);
+		entity.setChunked(chunked);
+		entity.setContentType(contentType);
+		return request(Method.POST, requestUri, headers, entity);
+	}
+
 	public RestClientResponse postString(String requestUri, String body) throws IOException {
 		return postString(requestUri, null, body);
 	}
 
 	public RestClientResponse postJsonString(String requestUri, String jsonData) throws IOException {
-		Map<String, String> headers = new HashMap<String, String>();
-		headers.put("Content-Type", "Application/json");
-		return postString(requestUri, headers, gson.toJson(jsonData));
+		return postString(requestUri, null, gson.toJson(jsonData), "Application/json");
 	}
 
 	public RestClientResponse postJsonString(String requestUri, Map<String, String> headers, String jsonData) throws IOException {
-		if (headers!=null && !headers.containsKey("Content-Type")) {
-			headers.put("Content-Type", "Application/json");
-		}
-		return postString(requestUri, headers, gson.toJson(jsonData));
+		return postString(requestUri, headers, gson.toJson(jsonData), "Application/json");
 	}
 
 	public RestClientResponse postJson(String requestUri, Map<String, Object> jsonData) throws IOException {
@@ -226,21 +228,23 @@ public class RestClient {
 		return request(Method.PUT, requestUri, headers, entity);
 	}
 
+	public RestClientResponse putString(String requestUri, Map<String, String> headers, String body, String contentType) throws IOException {
+		StringEntity entity = new StringEntity(body, Consts.UTF_8);
+		entity.setChunked(chunked);
+		entity.setContentType(contentType);
+		return request(Method.PUT, requestUri, headers, entity);
+	}
+
 	public RestClientResponse putString(String requestUri, String body) throws IOException {
 		return putString(requestUri, null, body);
 	}
 
 	public RestClientResponse putJsonString(String requestUri, String jsonData) throws IOException {
-		Map<String, String> headers = new HashMap<String, String>();
-		headers.put("Content-Type", "Application/json");
-		return putString(requestUri, headers, jsonData);
+		return putString(requestUri, null, jsonData, "Application/json");
 	}
 
 	public RestClientResponse putJsonString(String requestUri, Map<String, String> headers, String jsonData) throws IOException {
-		if (headers!=null && !headers.containsKey("Content-Type")) {
-			headers.put("Content-Type", "Application/json");
-		}
-		return putString(requestUri, headers, jsonData);
+		return putString(requestUri, headers, jsonData, "Application/json");
 	}
 
 	public RestClientResponse putJson(String requestUri, Map<String, Object> jsonData) throws IOException {
