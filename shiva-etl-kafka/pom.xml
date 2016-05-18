@@ -9,13 +9,13 @@
 	<groupId>com.reizes.shiva2</groupId>
 	<artifactId>shiva2-kafka</artifactId>
 	<name>shiva kafka</name>
-	<version>0.2.0</version>
+	<version>0.2.1-SNAPSHOT</version>
 	<description>Shiva Kafka Support Library 2016 reizes</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.reizes.shiva2</groupId>
 			<artifactId>shiva2-core</artifactId>
-			<version>${project.version}</version>
+			<version>0.2.0</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

@@ -186,6 +186,9 @@ polling:
         } finally {
 			try {
 		        consumer.commitSync();
+			}
+	        catch (WakeupException e) {
+	        	
 		    } finally {
 		        consumer.close();
 		    }
