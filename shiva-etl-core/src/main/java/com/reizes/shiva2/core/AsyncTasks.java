@@ -93,7 +93,7 @@ public class AsyncTasks implements Task, TasksHolder, AsyncTasksCallback, TasksP
 	@Override
 	public void setProcessContext(ProcessContext context) {
 		this.context = context;
-		this.thread.tasks.setProcessContext(this.thread.tasks.isShareProcessContext() ? context.clone() : new ProcessContext());
+		this.thread.tasks.setProcessContext(this.thread.tasks.isShareProcessContext() ? context : new ProcessContext());
 	}
 
 	public void join() throws InterruptedException {
@@ -157,5 +157,13 @@ public class AsyncTasks implements Task, TasksHolder, AsyncTasksCallback, TasksP
 	@Override
 	public void setTasksProcessor(TasksProcessor processor) {
 		this.thread.tasks.setTasksProcessor(processor);
+	}
+
+	public boolean isShareProcessContext() {
+		return this.thread.tasks.isShareProcessContext();
+	}
+
+	public void setShareProcessContext(boolean shareProcessContext) {
+		this.thread.tasks.setShareProcessContext(shareProcessContext);
 	}
 }
