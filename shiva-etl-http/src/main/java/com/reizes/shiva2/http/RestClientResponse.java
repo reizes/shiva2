@@ -1,20 +1,24 @@
 package com.reizes.shiva2.http;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.entity.BufferedHttpEntity;
+
 import com.google.gson.Gson;
 
 import lombok.Getter;
 import lombok.Setter;
 
-public class RestClientResponse implements Closeable {
-	private InputStream response;
+public class RestClientResponse {
 	@Getter
 	@Setter
 	private int responseCode;
@@ -26,12 +30,6 @@ public class RestClientResponse implements Closeable {
 	@Getter
 	private String responseText;
 	private Gson gson = new Gson();
-	
-	public void close() throws IOException {
-		if (response != null) {
-			response.close();
-		}
-	}
 	
 	public void putHeader(String key, String value) {
 		this.headers.put(key, value);
@@ -64,5 +62,25 @@ public class RestClientResponse implements Closeable {
 		br.close();
 		is.close();
 		return sb.toString();
+	}
+	
+	public static RestClientResponse fromHttpResponse(HttpResponse httpResponse)  throws IOException {
+		RestClientResponse restClientResponse = new RestClientResponse();
+		HttpEntity entity = httpResponse.getEntity();
+		if (entity != null) {
+			entity = new BufferedHttpEntity(entity);
+			restClientResponse.setResponse(entity.getContent());
+		}
+
+		StatusLine statusLine = httpResponse.getStatusLine();
+		restClientResponse.setResponseCode(statusLine.getStatusCode());
+		restClientResponse.setStatusText(statusLine.toString());
+		Header[] responseHeaders = httpResponse.getAllHeaders();
+		for (int i = 0; i < responseHeaders.length; i++) {
+			Header header = responseHeaders[i];
+			restClientResponse.putHeader(header.getName(), header.getValue());
+		}
+		
+		return restClientResponse;
 	}
 }

@@ -14,12 +14,14 @@ public class HttpClientThread extends Thread {
 
 	public HttpClientThread(CloseableHttpClient client, HttpHost host, HttpUriRequest request, HttpRequestCallback callback) {
 		this.client = client;
+		this.host = host;
 		this.request = request;
 		this.callback = callback;
 	}
 
 	public HttpClientThread(CloseableHttpClient client, HttpHost host, HttpUriRequest request) {
 		this.client = client;
+		this.host = host;
 		this.request = request;
 		this.callback = null;
 	}
@@ -29,7 +31,7 @@ public class HttpClientThread extends Thread {
 		try {
 			HttpResponse httpResponse = client.execute(host, request);
 			if (this.callback!=null) {
-				callback.onHttpResponse(httpResponse);
+				callback.onHttpResponse(RestClientResponse.fromHttpResponse(httpResponse));
 			}
 			EntityUtils.consume(httpResponse.getEntity());
 		} catch (Exception e) {

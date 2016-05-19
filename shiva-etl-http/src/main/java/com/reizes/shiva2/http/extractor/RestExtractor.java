@@ -23,7 +23,6 @@ public class RestExtractor extends AbstractExtractor implements AfterProcessAwar
 		
 		startProcessItem(resut);
 		
-		resut.close();
 		return requestUri;
 	}
 

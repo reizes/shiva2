@@ -6,35 +6,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.http.Consts;
-import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.StatusLine;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
+import com.reizes.shiva2.http.inner.Utils;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -47,13 +35,9 @@ public class RestClient implements Closeable {
 	private boolean chunked = true;
 	protected CloseableHttpClient httpclient;
 
-	public enum Method {
-		GET, PUT, POST, DELETE;
-	};
-
 	public RestClient(URI uri) {
 		this.setUri(uri);
-		initHttpClient();
+		httpclient = initHttpClient();
 	}
 
 	public RestClient(String uri) throws URISyntaxException {
@@ -61,61 +45,8 @@ public class RestClient implements Closeable {
 		httpclient = initHttpClient();
 	}
 	
-	protected HttpUriRequest buildRequest(Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity) {
-		HttpRequestBase requestBase = null;
-		switch (method) {
-		case PUT:
-			requestBase = new HttpPut(requestUri);
-			if (requestEntity != null) {
-				((HttpPut) requestBase).setEntity(requestEntity);
-			}
-			break;
-		case POST:
-			requestBase = new HttpPost(requestUri);
-			if (requestEntity != null) {
-				((HttpPost) requestBase).setEntity(requestEntity);
-			}
-			break;
-		case DELETE:
-			requestBase = new HttpDelete(requestUri);
-			break;
-		case GET:
-		default:
-			requestBase = new HttpGet(requestUri);
-			break;
-		}
-		
-		if (headers != null) {
-			for (String key : headers.keySet()) {
-				requestBase.addHeader(key, headers.get(key));
-			}
-		}
-		
-		return requestBase;
-	}
-	
 	protected CloseableHttpClient initHttpClient() {
 		return HttpClients.createDefault();
-	}
-	
-	private RestClientResponse handleResponse(HttpResponse httpResponse) throws IOException {
-		RestClientResponse restClientResponse = new RestClientResponse();
-		HttpEntity entity = httpResponse.getEntity();
-		if (entity != null) {
-			entity = new BufferedHttpEntity(entity);
-			restClientResponse.setResponse(entity.getContent());
-		}
-
-		StatusLine statusLine = httpResponse.getStatusLine();
-		restClientResponse.setResponseCode(statusLine.getStatusCode());
-		restClientResponse.setStatusText(statusLine.toString());
-		Header[] responseHeaders = httpResponse.getAllHeaders();
-		for (int i = 0; i < responseHeaders.length; i++) {
-			Header header = responseHeaders[i];
-			restClientResponse.putHeader(header.getName(), header.getValue());
-		}
-		
-		return restClientResponse;
 	}
 
 	public RestClientResponse request(Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity)
@@ -123,12 +54,12 @@ public class RestClient implements Closeable {
 		try {
 			// specify the host, protocol, and port
 			HttpHost target = new HttpHost(this.uri.getHost(), this.uri.getPort(), this.uri.getScheme());
-			HttpUriRequest request = buildRequest(method, requestUri, headers, requestEntity);
+			HttpUriRequest request = Utils.buildRequest(method, requestUri, headers, requestEntity);
 			
 			log.debug("executing request to " + target + requestUri);
 			
 			HttpResponse httpResponse = httpclient.execute(target, request);
-			RestClientResponse response = handleResponse(httpResponse);
+			RestClientResponse response = RestClientResponse.fromHttpResponse(httpResponse);
 			EntityUtils.consume(httpResponse.getEntity());
 			return response;
 		} catch (Exception e) {
@@ -164,16 +95,11 @@ public class RestClient implements Closeable {
 	}
 
 	public RestClientResponse postString(String requestUri, Map<String, String> headers, String body) throws IOException {
-		StringEntity entity = new StringEntity(body, Consts.UTF_8);
-		entity.setChunked(chunked);
-		return request(Method.POST, requestUri, headers, entity);
+		return request(Method.POST, requestUri, headers, Utils.getStringEntity(chunked, body));
 	}
 
 	public RestClientResponse postString(String requestUri, Map<String, String> headers, String body, String contentType) throws IOException {
-		StringEntity entity = new StringEntity(body, Consts.UTF_8);
-		entity.setChunked(chunked);
-		entity.setContentType(contentType);
-		return request(Method.POST, requestUri, headers, entity);
+		return request(Method.POST, requestUri, headers, Utils.getStringEntity(chunked, body, contentType));
 	}
 
 	public RestClientResponse postString(String requestUri, String body) throws IOException {
@@ -181,11 +107,11 @@ public class RestClient implements Closeable {
 	}
 
 	public RestClientResponse postJsonString(String requestUri, String jsonData) throws IOException {
-		return postString(requestUri, null, gson.toJson(jsonData), "Application/json");
+		return postString(requestUri, null, gson.toJson(jsonData), "application/json");
 	}
 
 	public RestClientResponse postJsonString(String requestUri, Map<String, String> headers, String jsonData) throws IOException {
-		return postString(requestUri, headers, gson.toJson(jsonData), "Application/json");
+		return postString(requestUri, headers, gson.toJson(jsonData), "application/json");
 	}
 
 	public RestClientResponse postJson(String requestUri, Map<String, Object> jsonData) throws IOException {
@@ -197,16 +123,11 @@ public class RestClient implements Closeable {
 	}
 
 	public RestClientResponse postFormParams(String requestUri, Map<String, String> params) throws IOException {
-		Map<String, String> headers = new HashMap<String, String>();
-		headers.put("Content-Type", "application/x-www-form-urlencoded");
-		return request(Method.POST, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
+		return request(Method.POST, requestUri, null, new UrlEncodedFormEntity(Utils.getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
 	public RestClientResponse postFormParams(String requestUri, Map<String, String> headers, Map<String, String> params) throws IOException {
-		if (headers!=null && !headers.containsKey("Content-Type")) {
-			headers.put("Content-Type", "application/x-www-form-urlencoded");
-		}
-		return request(Method.POST, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
+		return request(Method.POST, requestUri, headers, new UrlEncodedFormEntity(Utils.getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
 	public RestClientResponse postFile(String requestUri, File file) throws IOException {
@@ -234,16 +155,11 @@ public class RestClient implements Closeable {
 	}
 
 	public RestClientResponse putString(String requestUri, Map<String, String> headers, String body) throws IOException {
-		StringEntity entity = new StringEntity(body, Consts.UTF_8);
-		entity.setChunked(chunked);
-		return request(Method.PUT, requestUri, headers, entity);
+		return request(Method.PUT, requestUri, headers, Utils.getStringEntity(chunked, body));
 	}
 
 	public RestClientResponse putString(String requestUri, Map<String, String> headers, String body, String contentType) throws IOException {
-		StringEntity entity = new StringEntity(body, Consts.UTF_8);
-		entity.setChunked(chunked);
-		entity.setContentType(contentType);
-		return request(Method.PUT, requestUri, headers, entity);
+		return request(Method.PUT, requestUri, headers, Utils.getStringEntity(chunked, body, contentType));
 	}
 
 	public RestClientResponse putString(String requestUri, String body) throws IOException {
@@ -251,11 +167,11 @@ public class RestClient implements Closeable {
 	}
 
 	public RestClientResponse putJsonString(String requestUri, String jsonData) throws IOException {
-		return putString(requestUri, null, jsonData, "Application/json");
+		return putString(requestUri, null, jsonData, "application/json");
 	}
 
 	public RestClientResponse putJsonString(String requestUri, Map<String, String> headers, String jsonData) throws IOException {
-		return putString(requestUri, headers, jsonData, "Application/json");
+		return putString(requestUri, headers, jsonData, "application/json");
 	}
 
 	public RestClientResponse putJson(String requestUri, Map<String, Object> jsonData) throws IOException {
@@ -267,16 +183,11 @@ public class RestClient implements Closeable {
 	}
 
 	public RestClientResponse putFormParams(String requestUri, Map<String, String> params) throws IOException {
-		Map<String, String> headers = new HashMap<String, String>();
-		headers.put("Content-Type", "application/x-www-form-urlencoded");
-		return request(Method.PUT, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
+		return request(Method.PUT, requestUri, null, new UrlEncodedFormEntity(Utils.getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
 	public RestClientResponse putFormParams(String requestUri, Map<String, String> headers, Map<String, String> params) throws IOException {
-		if (headers!=null && !headers.containsKey("Content-Type")) {
-			headers.put("Content-Type", "application/x-www-form-urlencoded");
-		}
-		return request(Method.PUT, requestUri, headers, new UrlEncodedFormEntity(getNameValuePairListFromMap(params), Consts.UTF_8));
+		return request(Method.PUT, requestUri, headers, new UrlEncodedFormEntity(Utils.getNameValuePairListFromMap(params), Consts.UTF_8));
 	}
 
 	public RestClientResponse putFile(String requestUri, File file) throws IOException {
@@ -293,15 +204,6 @@ public class RestClient implements Closeable {
 
 	public RestClientResponse putInputStream(String requestUri, Map<String, String> headers, InputStream is) throws IOException {
 		return request(Method.PUT, requestUri, headers, new BufferedHttpEntity(new InputStreamEntity(is)));
-	}
-	
-	private List<NameValuePair> getNameValuePairListFromMap(Map<String, String> map) {
-		List<NameValuePair> list = new ArrayList<NameValuePair>();
-		for(String key : map.keySet()) {
-			list.add(new BasicNameValuePair(key, map.get(key)));
-		}
-		
-		return list;
 	}
 
 	@Override
