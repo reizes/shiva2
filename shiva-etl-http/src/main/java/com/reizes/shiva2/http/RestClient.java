@@ -1,5 +1,6 @@
 package com.reizes.shiva2.http;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +24,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.InputStreamEntity;
@@ -30,6 +32,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 
@@ -38,10 +41,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Slf4j
-public class RestClient {
+public class RestClient implements Closeable {
 	private URI uri;
 	private Gson gson = new Gson();
 	private boolean chunked = true;
+	protected CloseableHttpClient httpclient;
 
 	public enum Method {
 		GET, PUT, POST, DELETE;
@@ -49,83 +53,90 @@ public class RestClient {
 
 	public RestClient(URI uri) {
 		this.setUri(uri);
+		initHttpClient();
 	}
 
 	public RestClient(String uri) throws URISyntaxException {
 		this.setUri(new URI(uri));
+		httpclient = initHttpClient();
+	}
+	
+	protected HttpUriRequest buildRequest(Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity) {
+		HttpRequestBase requestBase = null;
+		switch (method) {
+		case PUT:
+			requestBase = new HttpPut(requestUri);
+			if (requestEntity != null) {
+				((HttpPut) requestBase).setEntity(requestEntity);
+			}
+			break;
+		case POST:
+			requestBase = new HttpPost(requestUri);
+			if (requestEntity != null) {
+				((HttpPost) requestBase).setEntity(requestEntity);
+			}
+			break;
+		case DELETE:
+			requestBase = new HttpDelete(requestUri);
+			break;
+		case GET:
+		default:
+			requestBase = new HttpGet(requestUri);
+			break;
+		}
+		
+		if (headers != null) {
+			for (String key : headers.keySet()) {
+				requestBase.addHeader(key, headers.get(key));
+			}
+		}
+		
+		return requestBase;
+	}
+	
+	protected CloseableHttpClient initHttpClient() {
+		return HttpClients.createDefault();
+	}
+	
+	private RestClientResponse handleResponse(HttpResponse httpResponse) throws IOException {
+		RestClientResponse restClientResponse = new RestClientResponse();
+		HttpEntity entity = httpResponse.getEntity();
+		if (entity != null) {
+			entity = new BufferedHttpEntity(entity);
+			restClientResponse.setResponse(entity.getContent());
+		}
+
+		StatusLine statusLine = httpResponse.getStatusLine();
+		restClientResponse.setResponseCode(statusLine.getStatusCode());
+		restClientResponse.setStatusText(statusLine.toString());
+		Header[] responseHeaders = httpResponse.getAllHeaders();
+		for (int i = 0; i < responseHeaders.length; i++) {
+			Header header = responseHeaders[i];
+			restClientResponse.putHeader(header.getName(), header.getValue());
+		}
+		
+		return restClientResponse;
 	}
 
 	public RestClientResponse request(Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity)
 			throws IOException {
-		InputStream is = null;
-		RestClientResponse restClientResponse = new RestClientResponse();
-		CloseableHttpClient httpclient = HttpClients.createDefault();
 		try {
 			// specify the host, protocol, and port
 			HttpHost target = new HttpHost(this.uri.getHost(), this.uri.getPort(), this.uri.getScheme());
-
-			HttpRequestBase requestBase = null;
-			switch (method) {
-			case PUT:
-				requestBase = new HttpPut(requestUri);
-				if (requestEntity != null) {
-					((HttpPut) requestBase).setEntity(requestEntity);
-				}
-				break;
-			case POST:
-				requestBase = new HttpPost(requestUri);
-				if (requestEntity != null) {
-					((HttpPost) requestBase).setEntity(requestEntity);
-				}
-				break;
-			case DELETE:
-				requestBase = new HttpDelete(requestUri);
-				break;
-			case GET:
-			default:
-				requestBase = new HttpGet(requestUri);
-				break;
-			}
+			HttpUriRequest request = buildRequest(method, requestUri, headers, requestEntity);
 			
 			log.debug("executing request to " + target + requestUri);
-
-			if (headers != null) {
-				for (String key : headers.keySet()) {
-					requestBase.addHeader(key, headers.get(key));
-				}
-			}
 			
-			HttpResponse httpResponse = httpclient.execute(target, requestBase);
-			HttpEntity entity = httpResponse.getEntity();
-			if (entity != null) {
-				entity = new BufferedHttpEntity(entity);
-				is = entity.getContent();
-			}
-
-			StatusLine statusLine = httpResponse.getStatusLine();
-			restClientResponse.setResponseCode(statusLine.getStatusCode());
-			restClientResponse.setStatusText(statusLine.toString());
-			if (statusLine.getStatusCode() != 200 && statusLine.getStatusCode() != 204) {
-				log.error(requestUri+" "+method.name()+"\t"+statusLine.toString()+"\t"+requestEntity.toString());
-			}
-			Header[] responseHeaders = httpResponse.getAllHeaders();
-			for (int i = 0; i < responseHeaders.length; i++) {
-				log.debug(responseHeaders[i].toString());
-			}
-
+			HttpResponse httpResponse = httpclient.execute(target, request);
+			RestClientResponse response = handleResponse(httpResponse);
+			EntityUtils.consume(httpResponse.getEntity());
+			return response;
 		} catch (Exception e) {
 			e.printStackTrace();
 			log.error(e.getMessage());
-		} finally {
-			// When HttpClient instance is no longer needed,
-			// shut down the connection manager to ensure
-			// immediate deallocation of all system resources
-			httpclient.close();
 		}
-		
-		restClientResponse.setResponse(is);
 
-		return restClientResponse;
+		return null;
 	}
 
 	public RestClientResponse get(String requestUri) throws IOException {
@@ -291,6 +302,13 @@ public class RestClient {
 		}
 		
 		return list;
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (httpclient != null) {
+			httpclient.close();
+		}
 	}
 
 }

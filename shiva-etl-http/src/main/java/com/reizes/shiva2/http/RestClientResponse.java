@@ -5,14 +5,27 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 
-import lombok.Data;
+import com.google.gson.Gson;
 
-@Data
+import lombok.Getter;
+import lombok.Setter;
+
 public class RestClientResponse implements Closeable {
 	private InputStream response;
+	@Getter
+	@Setter
 	private int responseCode;
+	@Getter
+	@Setter
 	private String statusText;
+	@Getter
+	private Map<String, String> headers = new HashMap<String, String>();
+	@Getter
+	private String responseText;
+	private Gson gson = new Gson();
 	
 	public void close() throws IOException {
 		if (response != null) {
@@ -20,8 +33,26 @@ public class RestClientResponse implements Closeable {
 		}
 	}
 	
-	public String getResponseText() throws IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(response));
+	public void putHeader(String key, String value) {
+		this.headers.put(key, value);
+	}
+	
+	public void setResponse(InputStream is) {
+		try {
+			this.responseText = getResponseText(is);
+		} catch (IOException e) {
+			this.responseText = e.getMessage();
+			e.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getResponseJson() {
+		return responseText!=null?gson.fromJson((String)responseText, HashMap.class):null;
+	}
+	
+	private String getResponseText(InputStream is) throws IOException {
+		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 		StringBuilder sb = new StringBuilder();
 		String line = null;
 		do {
@@ -31,7 +62,7 @@ public class RestClientResponse implements Closeable {
 			}
 		} while(line!=null);
 		br.close();
-		
+		is.close();
 		return sb.toString();
 	}
 }
