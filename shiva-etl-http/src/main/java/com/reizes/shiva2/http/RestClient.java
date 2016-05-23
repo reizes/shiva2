@@ -51,6 +51,7 @@ public class RestClient implements Closeable {
 
 	public RestClientResponse request(Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity)
 			throws IOException {
+		RestClientResponse response = null;
 		try {
 			// specify the host, protocol, and port
 			HttpHost target = new HttpHost(this.uri.getHost(), this.uri.getPort(), this.uri.getScheme());
@@ -59,15 +60,18 @@ public class RestClient implements Closeable {
 			log.debug("executing request to " + target + requestUri);
 			
 			HttpResponse httpResponse = httpclient.execute(target, request);
-			RestClientResponse response = RestClientResponse.fromHttpResponse(httpResponse);
+			response = RestClientResponse.fromHttpResponse(httpResponse);
 			EntityUtils.consume(httpResponse.getEntity());
 			return response;
 		} catch (Exception e) {
 			e.printStackTrace();
 			log.error(e.getMessage());
+			response = new RestClientResponse();
+			response.setStatusText(e.getMessage());
+			response.setResponseCode(-1);
 		}
 
-		return null;
+		return response;
 	}
 
 	public RestClientResponse get(String requestUri) throws IOException {
