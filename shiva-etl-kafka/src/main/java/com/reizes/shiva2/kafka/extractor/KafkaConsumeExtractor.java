@@ -88,7 +88,7 @@ public class KafkaConsumeExtractor extends AbstractNotificatableExtractor implem
 		} catch(CommitFailedException e) {
 			sendNotification(e);
             System.out.println(e.getMessage());
-            e.printStackTrace();
+            //e.printStackTrace();
 		}
 	}
 	
