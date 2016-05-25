@@ -64,16 +64,16 @@ public class KafkaConsumeExtractor extends AbstractNotificatableExtractor implem
         // Registering a shutdown hook so we can exit cleanly
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-            	status.setStatus("Starting exit");
+            	status.setStatusString("Starting exit");
                 System.out.println("Starting exit...");
                 isContinueConsume.set(false);
                 context.setExecutionStatus(ExecutionStatus.STOP);
                 consumer.wakeup();
                 try {
-                	status.setStatus("Wait join");
+                	status.setStatusString("Wait join");
                 	System.out.println("wait join...");
                     mainThread.join();
-                	status.setStatus("Exited");
+                	status.setStatusString("Exited");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -126,7 +126,7 @@ public class KafkaConsumeExtractor extends AbstractNotificatableExtractor implem
 				consumer.poll(0);
 				seek(consumer.assignment());
 			}
-			status.setStatus("Start consumer");
+			status.setStatusString("Start consumer");
 			String consumeMessageKey = status.getConsumeMessageKey();
 			long count = 0;
 polling: 
@@ -134,12 +134,14 @@ polling:
 				ConsumerRecords<String, String> records = consumer.poll(pollingTimeout);
 				
 				if (pollingTimeoutListener!=null && (records==null || records.count()==0)) {
-					status.setStatus("POLLING TIMEOUT");
+					status.setStatusString("POLLING TIMEOUT");
+					status.setStatus(KafkaConsumerStatus.IDLE);
 					pollingTimeoutListener.onPollingTimeout();
 					continue;
 				}
 				
-				status.setStatus("MESSAGE RECEIVED");
+				status.setStatusString("MESSAGE RECEIVED");
+				status.setStatus(KafkaConsumerStatus.BUSY);
 				for (ConsumerRecord<String, String> record : records) {
 					currentOffset.put(new TopicPartition(record.topic(), record.partition()), new OffsetAndMetadata(record.offset()));
 					status.setTopic(record.topic());
@@ -179,7 +181,7 @@ polling:
 				count = 0;
 				if (context.getExecutionStatus() == ExecutionStatus.STOP) break;
 			}
-			status.setStatus("Exit Consumer Loop");
+			status.setStatusString("Exit Consumer Loop");
 		} catch (WakeupException e) {
             // ignore for shutdown
 			sendNotification(e);
@@ -191,6 +193,8 @@ polling:
 	        	
 		    } finally {
 		        consumer.close();
+	        	status.setStatus(KafkaConsumerStatus.STOP);
+				status.setStatusString("Stopped...");
 		    }
 		}
 		return input;
@@ -292,11 +296,6 @@ polling:
 	}
 
 	@Override
-	public String getStatus() {
-		return status.getStatus();
-	}
-
-	@Override
 	public long getOffset() {
 		return status.getOffset();
 	}
@@ -323,7 +322,7 @@ polling:
 
 	@Override
 	public void stopConsumer() {
-    	status.setStatus("Starting exit");
+    	status.setStatusString("Starting exit");
         System.out.println("Starting exit...");
         isContinueConsume.set(false);
         context.setExecutionStatus(ExecutionStatus.STOP);
@@ -334,6 +333,24 @@ polling:
 	public void registerMBean(MBeanServer mbeanServer) throws Exception{
 		ObjectName mbeanName = new ObjectName("shiva2.kafka:type=KafkaConsumeExtractor");
 		mbeanServer.registerMBean(this, mbeanName);
+	}
+
+	public KafkaConsumerStatusListener getKafkaConsumerStatusListener() {
+		return status.getKafkaConsumerStatusListener();
+	}
+
+	public void setKafkaConsumerStatusListener(KafkaConsumerStatusListener kafkaConsumerStatusListener) {
+		status.setKafkaConsumerStatusListener(kafkaConsumerStatusListener);
+	}
+
+	@Override
+	public String getStatusString() {
+		return status.getStatusString();
+	}
+
+	@Override
+	public KafkaConsumerStatus getStatus() {
+		return status.getStatus();
 	}
 
 }

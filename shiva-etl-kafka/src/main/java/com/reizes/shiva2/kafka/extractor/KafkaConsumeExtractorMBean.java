@@ -1,7 +1,8 @@
 package com.reizes.shiva2.kafka.extractor;
 
 public interface KafkaConsumeExtractorMBean {
-	public String getStatus();
+	public String getStatusString();
+	public KafkaConsumerStatus getStatus();
 	public long getOffset();
 	public String getPartitions();
 	public String getTopic();
