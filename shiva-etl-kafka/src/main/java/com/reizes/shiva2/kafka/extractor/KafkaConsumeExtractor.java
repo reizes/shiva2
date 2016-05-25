@@ -3,6 +3,7 @@ package com.reizes.shiva2.kafka.extractor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -82,9 +83,13 @@ public class KafkaConsumeExtractor extends AbstractNotificatableExtractor implem
 	}
 	
 	private void commit() {
+		commit(currentOffset);
+	}
+	
+	private void commit(Map<TopicPartition, OffsetAndMetadata> offsets) {
 		try {
-			consumer.commitSync(currentOffset);
-			saveOffset(currentOffset.keySet(), currentOffset);
+			consumer.commitSync(offsets);
+			saveOffset(offsets);
 		} catch(CommitFailedException e) {
 			sendNotification(e);
             System.out.println(e.getMessage());
@@ -92,9 +97,9 @@ public class KafkaConsumeExtractor extends AbstractNotificatableExtractor implem
 		}
 	}
 	
-	private void saveOffset(Collection<TopicPartition> partitions, Map<TopicPartition, OffsetAndMetadata> offsets) {
+	private void saveOffset(Map<TopicPartition, OffsetAndMetadata> offsets) {
 		if (offsetStorage != null) {
-			for(TopicPartition partition : partitions) {
+			for(TopicPartition partition : offsets.keySet()) {
 				OffsetAndMetadata offset = offsets.get(partition);
 				offsetStorage.saveOffset(partition.topic(), partition.partition(), offset!=null?offset.offset():0);
 			}
@@ -142,8 +147,12 @@ polling:
 				
 				status.setStatusString("MESSAGE RECEIVED");
 				status.setStatus(KafkaConsumerStatus.BUSY);
+				HashMap<TopicPartition, OffsetAndMetadata> offsets = new HashMap<TopicPartition, OffsetAndMetadata>();
 				for (ConsumerRecord<String, String> record : records) {
-					currentOffset.put(new TopicPartition(record.topic(), record.partition()), new OffsetAndMetadata(record.offset()));
+					TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+					OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(record.offset());
+					currentOffset.put(topicPartition, offsetAndMetadata);
+					offsets.put(topicPartition, offsetAndMetadata);
 					status.setTopic(record.topic());
 					status.getPartitions().add(record.partition());
 					status.setOffset(record.offset());
@@ -160,7 +169,7 @@ polling:
 						case WAKEUP:
 							break;
 						case STOP:
-							commit();
+							commit(offsets);
 							break polling;
 						}
 					} else {
@@ -172,15 +181,18 @@ polling:
 						}
 						count++;
 						if (count%100 == 0) {
-							commit();
+							commit(offsets);
+							offsets.clear();
 							count = 0;
 						}
 					}
 				}
-				commit();
+				commit(offsets);
+				offsets.clear();
 				count = 0;
 				if (context.getExecutionStatus() == ExecutionStatus.STOP) break;
 			}
+			commit();
 			status.setStatusString("Exit Consumer Loop");
 		} catch (WakeupException e) {
             // ignore for shutdown
