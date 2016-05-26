@@ -88,8 +88,8 @@ public class KafkaConsumeExtractor extends AbstractNotificatableExtractor implem
 	
 	private void commit(Map<TopicPartition, OffsetAndMetadata> offsets) {
 		try {
-			consumer.commitSync(offsets);
 			saveOffset(offsets);
+			consumer.commitSync(offsets);
 		} catch(CommitFailedException e) {
 			sendNotification(e);
             System.out.println(e.getMessage());
