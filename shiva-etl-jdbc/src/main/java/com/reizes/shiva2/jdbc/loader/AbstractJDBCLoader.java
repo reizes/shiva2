@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +42,8 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 	private String processedQuery;
 	private PreparedStatement preparedStatement;
 	private boolean doReplace = false; // $column$가 포함되었는지 여부
-	private int curBatchUpdateCnt = 0;
+	private AtomicInteger curBatchUpdateCnt = new AtomicInteger(0);
+	private long updatedCount = 0;
 
 	abstract protected Object getData(Object object, String name) throws Exception;
 
@@ -155,13 +157,20 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 		}
 	}
 	
-	private synchronized void executeBatch(PreparedStatement preparedStatement) throws SQLException {
+	private synchronized int executeBatch(PreparedStatement preparedStatement) throws SQLException {
 		connect();
 		do {
 			try {
-				preparedStatement.executeBatch();
+				int[] results = preparedStatement.executeBatch();
 				connection.commit();
-				break;
+				
+				for(int i=0;i<results.length;i++) {
+					if (results[i]==PreparedStatement.EXECUTE_FAILED) {
+						System.out.println(i+"'th batch is failed..");
+					}
+				}
+				
+				return results.length;
 			} catch (SQLException e) {
 				System.out.println(e.getMessage());
 				if (StringUtils.indexOf(e.getMessage(), "try restarting transaction")>=0) {
@@ -180,9 +189,9 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 
 	@Override
 	public void onAfterProcess(ProcessContext context, Object data) throws SQLException {
-		if (isSupportsBatchUpdates() && curBatchUpdateCnt > 0) {
+		if (isSupportsBatchUpdates() && curBatchUpdateCnt.get() > 0) {
 			executeBatch(preparedStatement);
-			curBatchUpdateCnt = 0;
+			curBatchUpdateCnt.set(0);
 		}
 		if (preparedStatement != null) {
 			preparedStatement.close();
@@ -198,6 +207,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 	@Override
 	public Object doProcess(Object input) throws Exception {
 		connect();
+		updatedCount = 0;
 		if (doReplace) {
 			preparedStatement = connection.prepareStatement(processQueryReplace(input));
 			preparedStatement.clearParameters();
@@ -209,14 +219,16 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 			
 			if (isSupportsBatchUpdates()) {
 				preparedStatement.addBatch();
-				curBatchUpdateCnt++;
+				preparedStatement.clearParameters();
+				int curBatchCount = curBatchUpdateCnt.incrementAndGet();
 				
-				if (curBatchUpdateCnt == getBatchUpdateSize()) {
-					executeBatch(preparedStatement);
-					curBatchUpdateCnt = 0;
+				if (curBatchCount == getBatchUpdateSize()) {
+					updatedCount = executeBatch(preparedStatement);
+					curBatchUpdateCnt.set(0);
 				}
 			} else {
-				preparedStatement.executeUpdate();
+				updatedCount = preparedStatement.executeUpdate();
+				preparedStatement.clearParameters();
 			}
 		}
 		
@@ -227,8 +239,8 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 	public void flush() throws IOException  {
 		if (isSupportsBatchUpdates()) {
 			try {
-				executeBatch(preparedStatement);
-				curBatchUpdateCnt = 0;
+				updatedCount = executeBatch(preparedStatement);
+				curBatchUpdateCnt.set(0);
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}
@@ -281,4 +293,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 		this.enableBatchUpdates = enableBatchUpdates;
 	}
 
+	public long getUpdatedCount() {
+		return updatedCount;
+	}
 }
