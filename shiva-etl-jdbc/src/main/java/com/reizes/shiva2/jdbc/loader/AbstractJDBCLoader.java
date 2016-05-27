@@ -6,7 +6,8 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,12 +39,15 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 	private Connection connection;
 	private Pattern valuePattern = Pattern.compile("#([^\\#]+)#", Pattern.MULTILINE);
 	private Pattern replacePattern = Pattern.compile("\\$([^\\$]+)\\$", Pattern.MULTILINE);
-	private LinkedList<String> parameterList;
+	private List<String> parameterList;
 	private String processedQuery;
 	private PreparedStatement preparedStatement;
 	private boolean doReplace = false; // $column$가 포함되었는지 여부
 	private AtomicInteger curBatchUpdateCnt = new AtomicInteger(0);
 	private long updatedCount = 0;
+	
+	// for retry when lock wait timeout
+	private List<Object> parameterObjectList;
 
 	abstract protected Object getData(Object object, String name) throws Exception;
 
@@ -66,7 +70,9 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 	 * prepare parameter value : #column# -> ?
 	 */
 	private void prepareQuery() {
-		parameterList = new LinkedList<String>();
+		parameterList = new ArrayList<String>();
+		parameterObjectList = new ArrayList<Object>();
+		
 		Matcher matcher = valuePattern.matcher(query);
 		
 		while (matcher.find()) {
@@ -98,11 +104,16 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 		return sb.toString();
 	}
 
-	private void setParameter(Object object, PreparedStatement stmt) throws Exception {
+	private void setParameter(Object object, PreparedStatement stmt) throws SQLException {
 		int parameterIndex = 1;
 		
 		for (String name : parameterList) {
-			stmt.setObject(parameterIndex, getData(object, name));
+			try {
+				stmt.setObject(parameterIndex, getData(object, name));
+			} catch (Exception e) {
+				stmt.setObject(parameterIndex, null);
+				e.printStackTrace();
+			}
 			parameterIndex++;
 		}
 	}
@@ -163,6 +174,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 			try {
 				int[] results = preparedStatement.executeBatch();
 				connection.commit();
+				clearBatch(preparedStatement);
 				
 				for(int i=0;i<results.length;i++) {
 					if (results[i]==PreparedStatement.EXECUTE_FAILED) {
@@ -175,6 +187,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 				System.out.println(e.getMessage());
 				if (StringUtils.indexOf(e.getMessage(), "try restarting transaction")>=0) {
 					System.out.println("retrying....");
+					reprepareBatch(preparedStatement);
 					try {
 						Thread.sleep(sleepTimeWhenDeadlock);
 					} catch (InterruptedException e1) {
@@ -194,6 +207,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 			curBatchUpdateCnt.set(0);
 		}
 		if (preparedStatement != null) {
+			preparedStatement.clearBatch();
 			preparedStatement.close();
 		}
 		if (connection != null) {
@@ -202,6 +216,26 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 		
 		preparedStatement = null;
 		connection = null;
+	}
+	
+	private void addBatch(PreparedStatement preparedStatement, Object object) throws SQLException {
+		parameterObjectList.add(object);
+		preparedStatement.addBatch();
+		preparedStatement.clearParameters();
+	}
+	
+	private void clearBatch(PreparedStatement preparedStatement) throws SQLException {
+		parameterObjectList.clear();
+		preparedStatement.clearBatch();
+	}
+	
+	private void reprepareBatch(PreparedStatement preparedStatement) throws SQLException {
+		preparedStatement.clearBatch();
+		for (Object object : parameterObjectList) {
+			setParameter(object, preparedStatement);
+			preparedStatement.addBatch();
+			preparedStatement.clearParameters();
+		}
 	}
 
 	@Override
@@ -218,8 +252,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 			setParameter(input, preparedStatement);
 			
 			if (isSupportsBatchUpdates()) {
-				preparedStatement.addBatch();
-				preparedStatement.clearParameters();
+				addBatch(preparedStatement, input);
 				int curBatchCount = curBatchUpdateCnt.incrementAndGet();
 				
 				if (curBatchCount == getBatchUpdateSize()) {
