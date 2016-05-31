@@ -9,6 +9,7 @@ import com.reizes.shiva2.utils.StringUtil;
 
 public class MapLoader extends AbstractJDBCLoader {
 	private boolean useCamel = false;
+	private boolean lowerCase = true;
 
 	public MapLoader() {
 		super();
@@ -30,7 +31,8 @@ public class MapLoader extends AbstractJDBCLoader {
 	@Override
 	protected Object getData(Object object, String name) {
 		Map<String, Object> map = (Map<String, Object>)object;
-		String key = name.toLowerCase();
+		
+		String key = lowerCase?name.toLowerCase():name;
 		
 		if (useCamel) {
 			key = StringUtil.camelize(key);
@@ -45,6 +47,14 @@ public class MapLoader extends AbstractJDBCLoader {
 
 	public void setUseCamel(boolean useCamel) {
 		this.useCamel = useCamel;
+	}
+
+	public boolean isLowerCase() {
+		return lowerCase;
+	}
+
+	public void setLowerCase(boolean lowerCase) {
+		this.lowerCase = lowerCase;
 	}
 
 }
