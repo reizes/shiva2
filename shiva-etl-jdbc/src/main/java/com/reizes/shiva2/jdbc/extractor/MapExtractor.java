@@ -4,6 +4,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import com.reizes.shiva2.core.InvalidPropertyException;
 import com.reizes.shiva2.utils.StringUtil;
@@ -13,6 +16,22 @@ import com.reizes.shiva2.utils.StringUtil;
  */
 public class MapExtractor extends ResultSetExtractor {
 	private boolean useCamel = false;
+
+	public MapExtractor() {
+		super();
+	}
+
+	public MapExtractor(DataSource datasource) {
+		super(datasource);
+	}
+
+	public MapExtractor(Map<String, Object> datasourceProperties) throws Exception {
+		super(datasourceProperties);
+	}
+
+	public MapExtractor(Properties prop) throws Exception {
+		super(prop);
+	}
 
 	@Override
 	protected Object fetchResultSet(ResultSet rs, Object input) throws Exception {

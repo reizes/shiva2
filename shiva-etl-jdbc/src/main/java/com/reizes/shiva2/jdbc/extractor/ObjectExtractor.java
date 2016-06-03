@@ -1,12 +1,12 @@
 package com.reizes.shiva2.jdbc.extractor;
 
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import com.reizes.shiva2.core.InvalidPropertyException;
-import com.reizes.shiva2.utils.StringUtil;
 
 /*
  * Extract ResultSet To Object 
@@ -14,6 +14,22 @@ import com.reizes.shiva2.utils.StringUtil;
  */
 public class ObjectExtractor extends ResultSetExtractor {
 	private boolean useCamel = false;
+
+	public ObjectExtractor() {
+		super();
+	}
+
+	public ObjectExtractor(DataSource datasource) {
+		super(datasource);
+	}
+
+	public ObjectExtractor(Map<String, Object> datasourceProperties) throws Exception {
+		super(datasourceProperties);
+	}
+
+	public ObjectExtractor(Properties prop) throws Exception {
+		super(prop);
+	}
 
 	@Override
 	protected Object fetchResultSet(ResultSet rs, Object input) throws Exception {

@@ -5,6 +5,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 
@@ -25,6 +28,22 @@ public class ResultSetExtractor extends AbstractResultSetExtractor {
 	private String parameterPrefix = "${";
 	private String parameterSuffix = "}";
 	private BeforeExecuteQueryListener beforeExecuteQueryListener;
+
+	public ResultSetExtractor() {
+		super();
+	}
+
+	public ResultSetExtractor(DataSource datasource) {
+		super(datasource);
+	}
+
+	public ResultSetExtractor(Map<String, Object> datasourceProperties) throws Exception {
+		super(datasourceProperties);
+	}
+
+	public ResultSetExtractor(Properties prop) throws Exception {
+		super(prop);
+	}
 
 	@Override
 	public Object doProcess(Object input) throws Exception {

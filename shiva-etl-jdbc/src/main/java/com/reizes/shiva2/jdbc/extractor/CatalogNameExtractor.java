@@ -4,6 +4,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
 
 /**
  * Database Connection으로부터 catalog name list를 extract
@@ -12,6 +16,22 @@ import java.sql.SQLException;
  * @since 2010.4.12
  */
 public class CatalogNameExtractor extends AbstractResultSetExtractor {
+	public CatalogNameExtractor() {
+		super();
+	}
+
+	public CatalogNameExtractor(DataSource datasource) {
+		super(datasource);
+	}
+
+	public CatalogNameExtractor(Map<String, Object> datasourceProperties) throws Exception {
+		super(datasourceProperties);
+	}
+
+	public CatalogNameExtractor(Properties prop) throws Exception {
+		super(prop);
+	}
+
 	@Override
 	protected ResultSet getResultSet(Connection conn) throws SQLException {
 		DatabaseMetaData meta = conn.getMetaData();

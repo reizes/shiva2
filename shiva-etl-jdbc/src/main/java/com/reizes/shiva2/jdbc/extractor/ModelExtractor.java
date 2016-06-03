@@ -3,6 +3,10 @@ package com.reizes.shiva2.jdbc.extractor;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -18,6 +22,22 @@ public class ModelExtractor extends ResultSetExtractor {
 	private static HashMap<Class<?>, TypeHandler> typeHandlerMap;
 	private Class<?> modelClass;
 	private boolean useCamel = true;
+
+	public ModelExtractor() {
+		super();
+	}
+
+	public ModelExtractor(DataSource datasource) {
+		super(datasource);
+	}
+
+	public ModelExtractor(Map<String, Object> datasourceProperties) throws Exception {
+		super(datasourceProperties);
+	}
+
+	public ModelExtractor(Properties prop) throws Exception {
+		super(prop);
+	}
 
 	@Override
 	protected Object fetchResultSet(ResultSet rs, Object input) throws Exception {

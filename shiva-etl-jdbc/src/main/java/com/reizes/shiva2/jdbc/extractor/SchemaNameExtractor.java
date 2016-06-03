@@ -4,6 +4,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
 
 /**
  * Database Connection으로부터 schema name list를 extract
@@ -13,6 +17,22 @@ import java.sql.SQLException;
  */
 public class SchemaNameExtractor extends AbstractResultSetExtractor {
 	private String catalog;
+
+	public SchemaNameExtractor() {
+		super();
+	}
+
+	public SchemaNameExtractor(DataSource datasource) {
+		super(datasource);
+	}
+
+	public SchemaNameExtractor(Map<String, Object> datasourceProperties) throws Exception {
+		super(datasourceProperties);
+	}
+
+	public SchemaNameExtractor(Properties prop) throws Exception {
+		super(prop);
+	}
 
 	@Override
 	protected ResultSet getResultSet(Connection conn) throws SQLException {

@@ -5,6 +5,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import com.reizes.shiva2.jdbc.helper.JdbcColumnMetaData;
 import com.reizes.shiva2.jdbc.helper.JdbcTableMetaData;
@@ -24,6 +28,22 @@ public class TableMetaExtractor extends AbstractResultSetExtractor {
 		"SYNONYM"};
 	private boolean extractColumnInfo = false;
 	private Connection conn;
+
+	public TableMetaExtractor() {
+		super();
+	}
+
+	public TableMetaExtractor(DataSource datasource) {
+		super(datasource);
+	}
+
+	public TableMetaExtractor(Map<String, Object> datasourceProperties) throws Exception {
+		super(datasourceProperties);
+	}
+
+	public TableMetaExtractor(Properties prop) throws Exception {
+		super(prop);
+	}
 
 	private void extractColumnMeta(JdbcTableMetaData meta) throws SQLException {
 		DatabaseMetaData dbmeta = this.conn.getMetaData();
