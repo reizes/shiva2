@@ -18,7 +18,7 @@ import com.reizes.shiva2.core.AfterProcessAware;
 import com.reizes.shiva2.core.BeforeProcessAware;
 import com.reizes.shiva2.core.context.ProcessContext;
 
-public class MapMustacheTemplateApply extends AbstractTask implements BeforeProcessAware, AfterProcessAware {
+public class ApplyMustacheToMapTask extends AbstractTask implements BeforeProcessAware, AfterProcessAware {
 	private MustacheFactory mf = new DefaultMustacheFactory();
 	private Mustache mustache;
 	private Map<String, Object> functions;
@@ -26,12 +26,25 @@ public class MapMustacheTemplateApply extends AbstractTask implements BeforeProc
 	private String templateFilePath;
 	private Reader templateFileReader;
 	private Invocable invocable;
+	
+	public ApplyMustacheToMapTask() {
+		
+	}
+	
+	public ApplyMustacheToMapTask(String templateFilePath) {
+		this.setTemplateFilePath(templateFilePath);
+	}
+	
+	public ApplyMustacheToMapTask(String scriptEngineName, String templateFilePath) {
+		this.setScriptEngineName(scriptEngineName);
+		this.setTemplateFilePath(templateFilePath);
+	}
 
 	public Map<String, Object> getFunctions() {
 		return functions;
 	}
 
-	public MapMustacheTemplateApply setFunctions(Map<String, Object> functions) {
+	public ApplyMustacheToMapTask setFunctions(Map<String, Object> functions) {
 		this.functions = functions;
 		return this;
 	}
@@ -40,7 +53,7 @@ public class MapMustacheTemplateApply extends AbstractTask implements BeforeProc
 		return scriptEngineName;
 	}
 
-	public MapMustacheTemplateApply setScriptEngineName(String scriptEngineName) {
+	public ApplyMustacheToMapTask setScriptEngineName(String scriptEngineName) {
 		this.scriptEngineName = scriptEngineName;
 		return this;
 	}
@@ -49,7 +62,7 @@ public class MapMustacheTemplateApply extends AbstractTask implements BeforeProc
 		return templateFilePath;
 	}
 
-	public MapMustacheTemplateApply setTemplateFilePath(String templateFilePath) {
+	public ApplyMustacheToMapTask setTemplateFilePath(String templateFilePath) {
 		this.templateFilePath = templateFilePath;
 		return this;
 	}
