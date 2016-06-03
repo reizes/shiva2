@@ -3,6 +3,7 @@ package com.reizes.shiva2.core;
 import java.lang.management.ManagementFactory;
 import java.util.List;
 
+import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
@@ -264,8 +265,12 @@ public class TasksProcessor extends TasksBase implements TasksProcessorMBean, Ex
 	@Override
 	public void registerMBean(MBeanServer mbeanServer) throws Exception {
 		ObjectName mbeanName = new ObjectName("shiva2.core:type=TasksProcessor");
+		try {
 		mbeanServer.registerMBean(this, mbeanName);
 		this.context.registerMBean(mbeanServer);
 		super.registerMBean(mbeanServer);
+		} catch (InstanceAlreadyExistsException ex) {
+			; // ignore
+		}
 	}
 }

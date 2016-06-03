@@ -4,8 +4,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.sql.DataSource;
+
+import org.apache.commons.dbcp2.BasicDataSourceFactory;
 
 import com.reizes.shiva2.core.InvalidPropertyException;
 import com.reizes.shiva2.core.extractor.AbstractExtractor;
@@ -15,6 +19,7 @@ import com.reizes.shiva2.core.extractor.AbstractExtractor;
  * @author reizes
  * @since 2.1.0
  * @since 2010.4.12
+ * @since 2016.6.3 - 0.2.1
  */
 public abstract class AbstractResultSetExtractor extends AbstractExtractor {
 	private DataSource datasource;
@@ -25,6 +30,22 @@ public abstract class AbstractResultSetExtractor extends AbstractExtractor {
 	private long invalidateCount = 5000; // 5000개 마다 invalidate
 	private long currentCount = 0;
 	private long processedRowCount = 0;
+
+	public AbstractResultSetExtractor() {
+		
+	}
+	
+	public AbstractResultSetExtractor(DataSource datasource) {
+		this.setDatasource(datasource);
+	}
+	
+	public AbstractResultSetExtractor(Properties prop) throws Exception {
+		this.setDatasource(prop);
+	}
+	
+	public AbstractResultSetExtractor(Map<String, Object> datasourceProperties) throws Exception {
+		this.setDatasource(datasourceProperties);
+	}
 
 	protected abstract ResultSet getResultSet(Connection conn) throws Exception;
 
@@ -101,6 +122,16 @@ public abstract class AbstractResultSetExtractor extends AbstractExtractor {
 	public AbstractResultSetExtractor setDatasource(DataSource datasource) {
 		this.datasource = datasource;
 		return this;
+	}
+
+	public void setDatasource(Properties prop) throws Exception {
+		this.datasource = BasicDataSourceFactory.createDataSource(prop);
+	}
+
+	public void setDatasource(Map<String, Object> datasourceProperties) throws Exception {
+		Properties prop = new Properties();
+		prop.putAll(datasourceProperties);
+		this.datasource = BasicDataSourceFactory.createDataSource(prop);
 	}
 
 	public String getInvalidateQuery() {
