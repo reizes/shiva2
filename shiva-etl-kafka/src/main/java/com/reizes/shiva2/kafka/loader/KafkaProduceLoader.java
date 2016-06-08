@@ -1,41 +1,54 @@
 package com.reizes.shiva2.kafka.loader;
 
 import java.util.Map;
-import java.util.Properties;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.commons.lang3.StringUtils;
 
+import com.google.gson.Gson;
 import com.reizes.shiva2.core.AfterProcessAware;
 import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.loader.AbstractLoader;
 
 public class KafkaProduceLoader extends AbstractLoader implements AfterProcessAware {
-	private KafkaProducer<String, Object> producer;
+	private KafkaProducerHelper producerHelpder;
 	private String topic;
-	private String messageKey;
+	private String messageKeyName;
+	private String messageKey = null;	// static message key
+	private Gson gson;
 
-	public KafkaProduceLoader(Map<java.lang.String, java.lang.Object> configs) {
-		producer = new KafkaProducer<>(configs);
-		topic = (String) configs.get("topic");
-		messageKey = (String) configs.get("messageKey");
+	public KafkaProduceLoader(String topic, Map<java.lang.String, java.lang.Object> configs) {
+		producerHelpder = new KafkaProducerHelper(configs);
+		this.topic = topic;
+		gson = new Gson();
 	}
 
-	public KafkaProduceLoader(Properties properties) {
-		producer = new KafkaProducer<>(properties);
-		topic = properties.getProperty("topic");
-		messageKey = properties.getProperty("messageKey");
+	public KafkaProduceLoader(String topic, String messageKeyName, Map<java.lang.String, java.lang.Object> configs) {
+		producerHelpder = new KafkaProducerHelper(configs);
+		this.topic = topic;
+		this.messageKeyName = messageKeyName;
+		gson = new Gson();
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public Object doProcess(Object input) throws Exception {
-		producer.send(new ProducerRecord<String, Object>(topic, messageKey, input));
+		if (input instanceof String) {
+			producerHelpder.send(this.topic, this.messageKey, (String)input);
+		} else if (input instanceof Map) {
+			Map<String, Object> map = (Map<String, Object>) input;
+			String messageKey = null;
+			if (messageKeyName!=null) {
+				messageKey = map.get(messageKeyName).toString();
+			}
+			String message = StringUtils.removePattern(gson.toJson(map), "[\r\n\t]");
+			producerHelpder.send(this.topic, messageKey, message);
+		}
 		return input;
 	}
 
 	@Override
 	public void onAfterProcess(ProcessContext context, Object data) throws Exception {
-		producer.close();
+		producerHelpder.close();
 	}
 
 	public String getTopic() {
@@ -46,16 +59,20 @@ public class KafkaProduceLoader extends AbstractLoader implements AfterProcessAw
 		this.topic = topic;
 	}
 
+	public String getMessageKeyName() {
+		return messageKeyName;
+	}
+
+	public void setMessageKeyName(String messageKeyName) {
+		this.messageKeyName = messageKeyName;
+	}
+
 	public String getMessageKey() {
 		return messageKey;
 	}
 
 	public void setMessageKey(String messageKey) {
 		this.messageKey = messageKey;
-	}
-
-	public KafkaProducer<String, Object> getProducer() {
-		return producer;
 	}
 
 }
