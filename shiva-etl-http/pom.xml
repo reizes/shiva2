@@ -14,7 +14,7 @@
     <dependency>
       <groupId>com.reizes.shiva2</groupId>
       <artifactId>shiva2-core</artifactId>
-      <version>0.2.0</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
