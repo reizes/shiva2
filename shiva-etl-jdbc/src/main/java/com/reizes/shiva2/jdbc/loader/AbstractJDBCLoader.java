@@ -152,20 +152,6 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 		
 		prepareQuery();
 		connect();
-		
-		if (isEnableBatchUpdates()) {
-			DatabaseMetaData dbMetaData = connection.getMetaData();
-			supportsBatchUpdates = dbMetaData.supportsBatchUpdates();
-		}
-		if (!doReplace) {
-			try {
-				preparedStatement = connection.prepareStatement(processedQuery);
-			} catch (SQLException e) {
-				connection.close();
-				connection = null;
-				throw e;
-			}
-		}
 	}
 	
 	private synchronized int executeBatch(PreparedStatement preparedStatement) throws SQLException {

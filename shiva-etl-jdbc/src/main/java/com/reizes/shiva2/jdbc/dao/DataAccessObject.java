@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.sql.DataSource;
@@ -20,6 +21,7 @@ import javax.sql.DataSource;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -100,6 +102,20 @@ public class DataAccessObject {
 	 * @throws SQLException -
 	 */
 	public DataAccessObject(DataSource datasource) throws SQLException {
+		conn = datasource.getConnection();
+		initialize();
+	}
+
+	public DataAccessObject(Properties prop) throws Exception {
+		DataSource datasource = BasicDataSourceFactory.createDataSource(prop);
+		conn = datasource.getConnection();
+		initialize();
+	}
+
+	public DataAccessObject(Map<String, Object> datasourceProperties) throws Exception {
+		Properties prop = new Properties();
+		prop.putAll(datasourceProperties);
+		DataSource datasource = BasicDataSourceFactory.createDataSource(prop);
 		conn = datasource.getConnection();
 		initialize();
 	}
