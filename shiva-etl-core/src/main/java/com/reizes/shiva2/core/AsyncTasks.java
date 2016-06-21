@@ -43,7 +43,9 @@ public class AsyncTasks implements Task, TasksHolder, AsyncTasksCallback, TasksP
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				if (tasks.context.getExecutionStatus() == ExecutionStatus.STOP) break;
+				if (tasks.context.getExecutionStatus() == ExecutionStatus.STOP) {
+					break;
+				}
 			} while(isContinue.get());
 			try {
 				queue.clear();
