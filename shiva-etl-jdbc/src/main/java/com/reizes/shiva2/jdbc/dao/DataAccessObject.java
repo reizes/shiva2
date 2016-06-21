@@ -19,6 +19,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,6 +62,23 @@ public class DataAccessObject {
 
 	private Map<Class<?>, TypeHandler<?, ?>> handlerMap;
 	private boolean streamResultMode = false;
+
+	private Map preparedStatementCache = new LRUMap() {
+		@Override
+		protected boolean removeLRU(LinkEntry entry) {
+			PreparedStatement ps = (PreparedStatement) entry.getValue();
+
+			try {
+				if (ps != null) {
+					ps.close();
+				}
+			} catch (SQLException e) {
+				LOG.warn(e);
+			}
+
+			return true;
+		}
+	};
 
 	/**
 	 * DAO 연결
@@ -219,13 +237,6 @@ public class DataAccessObject {
 			} catch (SQLException e) {
 				LOG.warn(e);
 			}
-			try {
-				if (ps != null) {
-					ps.close();
-				}
-			} catch (SQLException e) {
-				LOG.warn(e);
-			}
 		}
 	}
 
@@ -292,13 +303,6 @@ public class DataAccessObject {
 			} catch (SQLException e) {
 				LOG.warn(e);
 			}
-			try {
-				if (ps != null) {
-					ps.close();
-				}
-			} catch (SQLException e) {
-				LOG.warn(e);
-			}
 		}
 	}
 
@@ -346,13 +350,6 @@ public class DataAccessObject {
 			try {
 				if (rs != null) {
 					rs.close();
-				}
-			} catch (SQLException e) {
-				LOG.warn(e);
-			}
-			try {
-				if (ps != null) {
-					ps.close();
 				}
 			} catch (SQLException e) {
 				LOG.warn(e);
@@ -454,18 +451,17 @@ public class DataAccessObject {
 			} catch (SQLException e) {
 				LOG.warn(e);
 			}
-			try {
-				if (ps != null) {
-					ps.close();
-				}
-			} catch (SQLException e) {
-				LOG.warn(e);
-			}
 		}
 	}
 
 	private PreparedStatement prepareStatement(Query query) throws SQLException {
-		PreparedStatement ps = conn.prepareStatement(query.getQuery());
+		PreparedStatement ps = (PreparedStatement) preparedStatementCache.get(query.getQuery());
+
+		if (ps == null) {
+			ps = conn.prepareStatement(query.getQuery());
+			preparedStatementCache.put(query.getQuery(), ps);
+		}
+
 		if (streamResultMode) {
 			ps.setFetchSize(Integer.MIN_VALUE);
 		}
@@ -525,5 +521,4 @@ public class DataAccessObject {
 
 		return resultObject;
 	}
-
 }
