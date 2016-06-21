@@ -351,8 +351,9 @@ polling:
 		return status.getKafkaConsumerStatusListener();
 	}
 
-	public void setKafkaConsumerStatusListener(KafkaConsumerStatusListener kafkaConsumerStatusListener) {
+	public KafkaConsumeExtractor setKafkaConsumerStatusListener(KafkaConsumerStatusListener kafkaConsumerStatusListener) {
 		status.setKafkaConsumerStatusListener(kafkaConsumerStatusListener);
+		return this;
 	}
 
 	@Override

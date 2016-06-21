@@ -14,10 +14,10 @@ public class AsyncTasks implements Task, TasksHolder, AsyncTasksCallback, TasksP
 	private ProcessorThread thread = new ProcessorThread();
 	private Object result;
 	
-	private class ProcessorThread extends Thread {
+	private class ProcessorThread extends Thread implements ExceptionListener {
 		private List<AsyncTasksCallback> onFinish = new ArrayList<>();
 		private AsyncTasksCallback callbackToParent;
-		private List<AsyncTasksCallback> onException = new ArrayList<>();
+		private ExceptionListener onException;
 		private Tasks tasks = new Tasks();
 		private SynchronousQueue<Object> queue = new SynchronousQueue<Object>();
 		private AtomicBoolean isContinue = new AtomicBoolean(true);
@@ -37,20 +37,29 @@ public class AsyncTasks implements Task, TasksHolder, AsyncTasksCallback, TasksP
 						continue;
 					}
 					Object result = tasks.processElementList(object, null);
+					tasks.setExceptionListener(this);
 					callbackToParent.callback(result);
 					callCallback(onFinish, result);
 				} catch (Exception e) {
 					e.printStackTrace();
-					callCallback(onException, result);
 				}
-				if (tasks.context.getExecutionStatus() == ExecutionStatus.STOP) break;
+				if (tasks.context.getExecutionStatus() == ExecutionStatus.STOP) {
+					break;
+				}
 			} while(isContinue.get());
 			try {
 				queue.clear();
 				tasks.onAfterProcess(context, null);
 			} catch (Exception e) {
 				e.printStackTrace();
-				callCallback(onException, null);
+				onException(null, null, e);
+			}
+		}
+
+		@Override
+		public void onException(ProcessContext context, Object input, Exception e) {
+			if (onException!=null) {
+				onException.onException(context, input, e);
 			}
 		}
 		
@@ -65,10 +74,10 @@ public class AsyncTasks implements Task, TasksHolder, AsyncTasksCallback, TasksP
 		this.thread.onFinish.add(onFinish);
 	}
 	
-	public AsyncTasks(AsyncTasksCallback onFinish, AsyncTasksCallback onException) {
+	public AsyncTasks(AsyncTasksCallback onFinish, ExceptionListener onException) {
 		this.thread.callbackToParent = this;
 		this.thread.onFinish.add(onFinish);
-		this.thread.onException.add(onException);
+		this.thread.onException=onException;
 	}
 	
 	public AsyncTasks addOnFinishCallback(AsyncTasksCallback onFinish) {
@@ -76,8 +85,8 @@ public class AsyncTasks implements Task, TasksHolder, AsyncTasksCallback, TasksP
 		return this;
 	}
 	
-	public AsyncTasks addOnExceptionCallback(AsyncTasksCallback onException) {
-		this.thread.onException.add(onException);
+	public AsyncTasks setExceptionListener(ExceptionListener onException) {
+		this.thread.onException=onException;
 		return this;
 	}
 
