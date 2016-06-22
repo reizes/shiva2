@@ -12,13 +12,16 @@ import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
@@ -46,7 +49,10 @@ public class RestClient implements Closeable {
 	}
 	
 	protected CloseableHttpClient initHttpClient() {
-		return HttpClients.createDefault();
+	    final PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager (/*socketFactoryRegistry*/);
+	    manager.setMaxTotal (50);
+	    final RequestConfig config = RequestConfig.custom().setConnectTimeout(60000).build ();
+		return HttpClients.custom().setConnectionManager(manager).setDefaultRequestConfig (config).setConnectionManagerShared(true).build();
 	}
 
 	public RestClientResponse request(Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity)
