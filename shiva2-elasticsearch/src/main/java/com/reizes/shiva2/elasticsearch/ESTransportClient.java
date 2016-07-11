@@ -29,13 +29,13 @@ import org.elasticsearch.script.Script;
 import com.reizes.shiva2.core.InvalidPropertyException;
 import com.reizes.shiva2.core.NullArgumentException;
 
-public class ESClient implements Closeable {
+public class ESTransportClient implements Closeable {
 	private Client client;
 	private static final int DEFAULT_PORT = 9300;
 	private BulkRequestBuilder bulkRequest;
 	private Map<String, Object> configs;
 	
-	public ESClient(Map<String, Object> configs) {
+	public ESTransportClient(Map<String, Object> configs) {
 		this.configs = configs;
 	}
 	

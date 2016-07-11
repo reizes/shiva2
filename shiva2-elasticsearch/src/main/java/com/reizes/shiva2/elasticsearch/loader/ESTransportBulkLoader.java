@@ -17,10 +17,10 @@ import com.reizes.shiva2.core.InvalidPropertyException;
 import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.loader.AbstractLoader;
 import com.reizes.shiva2.elasticsearch.BulkLoadException;
-import com.reizes.shiva2.elasticsearch.ESClient;
+import com.reizes.shiva2.elasticsearch.ESTransportClient;
 
-public class ESBulkLoader extends AbstractLoader implements Closeable, Flushable, AfterProcessAware, BeforeProcessAware {
-	private ESClient client;
+public class ESTransportBulkLoader extends AbstractLoader implements Closeable, Flushable, AfterProcessAware, BeforeProcessAware {
+	private ESTransportClient client;
 	private int bulkSize = 500;
 	private String indexFormat;
 	private String typeFormat;
@@ -30,15 +30,15 @@ public class ESBulkLoader extends AbstractLoader implements Closeable, Flushable
 	private boolean bulkLoad = true;
 	private int currentCount=0;
 	
-	public ESBulkLoader(Map<String, Object> configs) {
-		client = new ESClient(configs);
+	public ESTransportBulkLoader(Map<String, Object> configs) {
+		client = new ESTransportClient(configs);
 	}
 	
-	public ESBulkLoader(List<String> hosts, String clusterName) {
+	public ESTransportBulkLoader(List<String> hosts, String clusterName) {
 		Map<String, Object> configs = new HashMap<>();
 		configs.put("hosts", hosts);
 		configs.put("cluster.name", clusterName);
-		client = new ESClient(configs);
+		client = new ESTransportClient(configs);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -151,7 +151,7 @@ public class ESBulkLoader extends AbstractLoader implements Closeable, Flushable
 		return bulkSize;
 	}
 
-	public ESBulkLoader setBulkSize(int bulkSize) {
+	public ESTransportBulkLoader setBulkSize(int bulkSize) {
 		this.bulkSize = bulkSize;
 		return this;
 	}
@@ -160,7 +160,7 @@ public class ESBulkLoader extends AbstractLoader implements Closeable, Flushable
 		return indexFormat;
 	}
 
-	public ESBulkLoader setIndexFormat(String indexFormat) {
+	public ESTransportBulkLoader setIndexFormat(String indexFormat) {
 		this.indexFormat = indexFormat;
 		return this;
 	}
@@ -169,7 +169,7 @@ public class ESBulkLoader extends AbstractLoader implements Closeable, Flushable
 		return typeFormat;
 	}
 
-	public ESBulkLoader setTypeFormat(String typeFormat) {
+	public ESTransportBulkLoader setTypeFormat(String typeFormat) {
 		this.typeFormat = typeFormat;
 		return this;
 	}
@@ -178,7 +178,7 @@ public class ESBulkLoader extends AbstractLoader implements Closeable, Flushable
 		return idFormat;
 	}
 
-	public ESBulkLoader setIdFormat(String idFormat) {
+	public ESTransportBulkLoader setIdFormat(String idFormat) {
 		this.idFormat = idFormat;
 		return this;
 	}
@@ -200,7 +200,7 @@ public class ESBulkLoader extends AbstractLoader implements Closeable, Flushable
 		return actionFormat;
 	}
 
-	public ESBulkLoader setActionFormat(String actionFormat) {
+	public ESTransportBulkLoader setActionFormat(String actionFormat) {
 		this.actionFormat = actionFormat;
 		return this;
 	}
@@ -209,7 +209,7 @@ public class ESBulkLoader extends AbstractLoader implements Closeable, Flushable
 		return action;
 	}
 
-	public ESBulkLoader setAction(ESLoaderAction action) {
+	public ESTransportBulkLoader setAction(ESLoaderAction action) {
 		this.action = action;
 		return this;
 	}
@@ -218,7 +218,7 @@ public class ESBulkLoader extends AbstractLoader implements Closeable, Flushable
 		return bulkLoad;
 	}
 
-	public ESBulkLoader setBulkLoad(boolean bulkLoad) {
+	public ESTransportBulkLoader setBulkLoad(boolean bulkLoad) {
 		this.bulkLoad = bulkLoad;
 		return this;
 	}

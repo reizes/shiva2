@@ -22,7 +22,7 @@ import org.junit.Test;
 import com.google.gson.Gson;
 
 public class ESClientTest {
-	ESClient client;
+	ESTransportClient client;
 	Gson gson;
 	
 	String index="shiva2-es-test";
@@ -39,7 +39,7 @@ public class ESClientTest {
 		hosts.add("s2-es-test.s2.krane.9rum.cc:9300");
 		configs.put("hosts", hosts);
 		configs.put("cluster.name", "smeagol-contents");
-		client = new ESClient(configs);
+		client = new ESTransportClient(configs);
 		gson = new Gson();
 		
 		testDoc = new HashMap<>();
