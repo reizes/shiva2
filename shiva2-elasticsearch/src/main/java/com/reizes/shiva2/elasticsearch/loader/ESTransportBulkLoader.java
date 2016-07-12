@@ -130,7 +130,7 @@ public class ESTransportBulkLoader extends AbstractLoader implements Closeable, 
 		if (isBulkLoad()) {
 			BulkResponse response = client.executeBulk();
 			currentCount = 0;
-			if (response.hasFailures()) {
+			if (response!=null && response.hasFailures()) {
 				StringBuilder sb = new StringBuilder();
 				for(BulkItemResponse itemResponse : response.getItems()) {
 					if (itemResponse.isFailed()) {

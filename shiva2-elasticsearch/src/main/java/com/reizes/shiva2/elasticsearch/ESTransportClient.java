@@ -34,6 +34,7 @@ public class ESTransportClient implements Closeable {
 	private static final int DEFAULT_PORT = 9300;
 	private BulkRequestBuilder bulkRequest;
 	private Map<String, Object> configs;
+	private long bulkRequestCount = 0;
 	
 	public ESTransportClient(Map<String, Object> configs) {
 		this.configs = configs;
@@ -91,6 +92,7 @@ public class ESTransportClient implements Closeable {
 	public void addBulkUpdate(UpdateRequest request) {
 		connect();
 		bulkRequest.add(request);
+		bulkRequestCount++;
 	}
 	
 	public void addBulkUpdate(String index, String type, String id, String jsonString, Script script) {
@@ -100,6 +102,7 @@ public class ESTransportClient implements Closeable {
 			builder.setScript(script);
 		}
 		bulkRequest.add(builder);
+		bulkRequestCount++;
 	}
 	
 	public void addBulkUpdate(String index, String type, String id, String jsonString) {
@@ -113,6 +116,7 @@ public class ESTransportClient implements Closeable {
 			builder.setScript(script);
 		}
 		bulkRequest.add(builder);
+		bulkRequestCount++;
 	}
 	
 	public void addBulkUpdate(String index, String type, String id, Map<String, Object> doc) {
@@ -122,31 +126,41 @@ public class ESTransportClient implements Closeable {
 	public void addBulkDelete(DeleteRequest request) {
 		connect();
 		bulkRequest.add(request);
+		bulkRequestCount++;
 	}
 	
 	public void addBulkDelete(String index, String type, String id) {
 		connect();
 		bulkRequest.add(client.prepareDelete(index, type, id));
+		bulkRequestCount++;
 	}
 	
 	public void addBulkIndex(IndexRequest request) {
 		connect();
 		bulkRequest.add(request);
+		bulkRequestCount++;
 	}
 	
 	public void addBulkIndex(String index, String type, String id, Map<String, Object> doc) {
 		connect();
 		bulkRequest.add(client.prepareIndex(index, type, id).setSource(doc));
+		bulkRequestCount++;
 	}
 	
 	public void addBulkIndex(String index, String type, String id, String jsonString) {
 		connect();
 		bulkRequest.add(client.prepareIndex(index, type, id).setSource(jsonString));
+		bulkRequestCount++;
 	}
 	
 	public BulkResponse executeBulk() {
-		connect();
-		return bulkRequest.get();
+		if (bulkRequestCount>0) {
+			connect();
+			bulkRequestCount=0;
+			return bulkRequest.get();
+		}
+		
+		return null;
 	}
 	
 	public GetResponse get(String index, String type, String id) {
