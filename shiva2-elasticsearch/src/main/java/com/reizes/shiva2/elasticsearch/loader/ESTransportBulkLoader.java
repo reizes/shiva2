@@ -29,6 +29,7 @@ public class ESTransportBulkLoader extends AbstractLoader implements Closeable, 
 	private ESLoaderAction action;
 	private boolean bulkLoad = true;
 	private int currentCount=0;
+	private ESIdGenerator idGenerator;
 	
 	public ESTransportBulkLoader(Map<String, Object> configs) {
 		client = new ESTransportClient(configs);
@@ -51,6 +52,10 @@ public class ESTransportBulkLoader extends AbstractLoader implements Closeable, 
 			String index = sub.replace(indexFormat);
 			String type = sub.replace(typeFormat);
 			String id = sub.replace(idFormat);
+			
+			if (idGenerator!=null) {
+				id = idGenerator.generateId(id);
+			}
 			
 			ESLoaderAction action = this.action;
 			if (actionFormat!=null) {
@@ -220,6 +225,15 @@ public class ESTransportBulkLoader extends AbstractLoader implements Closeable, 
 
 	public ESTransportBulkLoader setBulkLoad(boolean bulkLoad) {
 		this.bulkLoad = bulkLoad;
+		return this;
+	}
+
+	public ESIdGenerator getIdGenerator() {
+		return idGenerator;
+	}
+
+	public ESTransportBulkLoader setIdGenerator(ESIdGenerator idGenerator) {
+		this.idGenerator = idGenerator;
 		return this;
 	}
 
