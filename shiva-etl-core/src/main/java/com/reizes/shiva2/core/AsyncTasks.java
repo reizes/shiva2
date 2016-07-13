@@ -22,6 +22,10 @@ public class AsyncTasks implements Task, TasksHolder, AsyncTasksCallback, TasksP
 		private SynchronousQueue<Object> queue = new SynchronousQueue<Object>();
 		private AtomicBoolean isContinue = new AtomicBoolean(true);
 		
+		public ProcessorThread() {
+			super("Shiva2 Asynctasks Worker Thread");
+		}
+		
 		private void callCallback(List<AsyncTasksCallback> list, Object data) {
 			for(AsyncTasksCallback callback : list) {
 				callback.callback(data);
