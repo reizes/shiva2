@@ -7,9 +7,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
@@ -25,6 +22,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import com.google.gson.Gson;
+import com.reizes.shiva2.core.ExceptionListener;
 import com.reizes.shiva2.http.inner.Utils;
 
 import lombok.Getter;
@@ -36,12 +34,18 @@ public class ThreadedRestClient implements Closeable {
 	private int maxTotal = 100;
 	@Getter
 	@Setter
-	private int maxPerRoute = 10;
+	private int maxPerRoute = 20;
+	@Getter
+	@Setter
+	private int timeout = 5000;
 	private Gson gson = new Gson();
 	private static ThreadedRestClient instance = null;
 	
 	private CloseableHttpClient httpclient;
-	private ExecutorService pool = Executors.newFixedThreadPool(20);
+	@Getter
+	@Setter
+	private ExceptionListener exceptionListener;
+	PoolingHttpClientConnectionManager connManager;
 	
 	private ThreadedRestClient() {
 		httpclient = initHttpClient();
@@ -56,20 +60,20 @@ public class ThreadedRestClient implements Closeable {
 	}
 
 	protected CloseableHttpClient initHttpClient() {
-		PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
+		connManager = new PoolingHttpClientConnectionManager();
 		connManager.setMaxTotal(maxTotal);
 		connManager.setDefaultMaxPerRoute(maxPerRoute);
-		connManager.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(5000).build());
-		CloseableHttpClient client = HttpClients.custom().
-		    setConnectionManager(connManager).build();
-		
+		connManager.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(timeout).build());
+		CloseableHttpClient client = HttpClients.custom().setConnectionManager(connManager).build();
 		return client;
 	}
 
 	public void requestAsync(URI uri, Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity, HttpRequestCallback callback) throws IOException {
 		HttpHost target = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
 		HttpUriRequest request = Utils.buildRequest(method, requestUri, headers, requestEntity);
-		pool.execute(new HttpClientThread(httpclient, target, request, callback));
+		HttpClientThread thread = new HttpClientThread(httpclient, target, request, callback);
+		thread.setExceptionListener(exceptionListener);
+		thread.start();
 	}
 	
 	public void requestAsync(String uri, Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity, HttpRequestCallback callback) throws IOException, URISyntaxException {
@@ -78,16 +82,8 @@ public class ThreadedRestClient implements Closeable {
 
 	@Override
 	public synchronized void close() throws IOException {
-		pool.shutdown();
 		httpclient.close();
-		try {
-			if (!pool.awaitTermination(30000, TimeUnit.MILLISECONDS)) {
-				pool.shutdownNow();
-			}
-		} catch (InterruptedException e) {
-			pool.shutdownNow();
-			Thread.currentThread().interrupt();
-		}
+		connManager.shutdown();
 	}
 
 	public void get(String server, String requestUri, HttpRequestCallback callback) throws IOException, URISyntaxException {
@@ -249,5 +245,4 @@ public class ThreadedRestClient implements Closeable {
 	public void putInputStream(String server, String requestUri, Map<String, String> headers, InputStream is, HttpRequestCallback callback) throws IOException, URISyntaxException {
 		requestAsync(server, Method.PUT, requestUri, headers, new BufferedHttpEntity(new InputStreamEntity(is)), callback);
 	}
-
 }
