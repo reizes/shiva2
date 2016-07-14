@@ -67,7 +67,7 @@ public class ThreadedRestClient implements Closeable {
 		connManager.setDefaultMaxPerRoute(maxPerRoute);
 		connManager.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(timeout).build());
 		CloseableHttpClient client = HttpClients.custom().setConnectionManager(connManager).build();
-		closed.set(true);
+		closed.set(false);
 		return client;
 	}
 
