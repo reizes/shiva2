@@ -93,6 +93,10 @@ public class ThreadedRestClient implements Closeable {
 			connManager.shutdown();
 		}
 	}
+	
+	public boolean isClosed() {
+		return closed.get();
+	}
 
 	public void get(String server, String requestUri, HttpRequestCallback callback) throws IOException, URISyntaxException {
 		requestAsync(server, Method.GET, requestUri, null, null, callback);
