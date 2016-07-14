@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
@@ -40,6 +41,7 @@ public class ThreadedRestClient implements Closeable {
 	private int timeout = 5000;
 	private Gson gson = new Gson();
 	private static ThreadedRestClient instance = null;
+	private AtomicBoolean closed = new AtomicBoolean(true);
 	
 	private CloseableHttpClient httpclient;
 	@Getter
@@ -59,21 +61,24 @@ public class ThreadedRestClient implements Closeable {
 		return instance;
 	}
 
-	protected CloseableHttpClient initHttpClient() {
+	protected synchronized CloseableHttpClient initHttpClient() {
 		connManager = new PoolingHttpClientConnectionManager();
 		connManager.setMaxTotal(maxTotal);
 		connManager.setDefaultMaxPerRoute(maxPerRoute);
 		connManager.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(timeout).build());
 		CloseableHttpClient client = HttpClients.custom().setConnectionManager(connManager).build();
+		closed.set(true);
 		return client;
 	}
 
 	public void requestAsync(URI uri, Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity, HttpRequestCallback callback) throws IOException {
-		HttpHost target = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
-		HttpUriRequest request = Utils.buildRequest(method, requestUri, headers, requestEntity);
-		HttpClientThread thread = new HttpClientThread(httpclient, target, request, callback);
-		thread.setExceptionListener(exceptionListener);
-		thread.start();
+		if (!closed.get()) {
+			HttpHost target = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
+			HttpUriRequest request = Utils.buildRequest(method, requestUri, headers, requestEntity);
+			HttpClientThread thread = new HttpClientThread(httpclient, target, request, callback);
+			thread.setExceptionListener(exceptionListener);
+			thread.start();
+		}
 	}
 	
 	public void requestAsync(String uri, Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity, HttpRequestCallback callback) throws IOException, URISyntaxException {
@@ -82,8 +87,11 @@ public class ThreadedRestClient implements Closeable {
 
 	@Override
 	public synchronized void close() throws IOException {
-		httpclient.close();
-		connManager.shutdown();
+		if (!closed.get()) {
+			closed.set(true);
+			httpclient.close();
+			connManager.shutdown();
+		}
 	}
 
 	public void get(String server, String requestUri, HttpRequestCallback callback) throws IOException, URISyntaxException {
