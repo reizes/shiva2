@@ -7,20 +7,18 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 import com.reizes.shiva2.core.ExceptionListener;
@@ -30,27 +28,16 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class ThreadedRestClient implements Closeable {
-	@Getter
-	@Setter
-	private int maxTotal = 100;
-	@Getter
-	@Setter
-	private int maxPerRoute = 20;
-	@Getter
-	@Setter
-	private int timeout = 5000;
-	private Gson gson = new Gson();
 	private static ThreadedRestClient instance = null;
-	private AtomicBoolean closed = new AtomicBoolean(true);
-	
+	private Gson gson = new Gson();
 	private CloseableHttpClient httpclient;
+
 	@Getter
 	@Setter
 	private ExceptionListener exceptionListener;
-	PoolingHttpClientConnectionManager connManager;
 	
 	private ThreadedRestClient() {
-		httpclient = initHttpClient();
+		httpclient = ThreadedRestClientPool.getInstance().getHttpclient();
 	}
 	
 	public synchronized static ThreadedRestClient getInstance() {
@@ -61,23 +48,27 @@ public class ThreadedRestClient implements Closeable {
 		return instance;
 	}
 
-	protected synchronized CloseableHttpClient initHttpClient() {
-		connManager = new PoolingHttpClientConnectionManager();
-		connManager.setMaxTotal(maxTotal);
-		connManager.setDefaultMaxPerRoute(maxPerRoute);
-		connManager.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(timeout).build());
-		CloseableHttpClient client = HttpClients.custom().setConnectionManager(connManager).build();
-		closed.set(false);
-		return client;
-	}
-
 	public void requestAsync(URI uri, Method method, String requestUri, Map<String, String> headers, HttpEntity requestEntity, HttpRequestCallback callback) throws IOException {
-		if (!closed.get()) {
+		if (!ThreadedRestClientPool.getInstance().isShutdown()) {
 			HttpHost target = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
 			HttpUriRequest request = Utils.buildRequest(method, requestUri, headers, requestEntity);
-			HttpClientThread thread = new HttpClientThread(httpclient, target, request, callback);
-			thread.setExceptionListener(exceptionListener);
-			thread.start();
+			
+			try {
+				CloseableHttpResponse httpResponse = httpclient.execute(target, request);
+				try {
+					if (callback!=null) {
+						callback.onHttpResponse(RestClientResponse.fromHttpResponse(httpResponse));
+					}
+				} finally {
+					EntityUtils.consume(httpResponse.getEntity());
+					httpResponse.close();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				if (exceptionListener!=null) {
+					exceptionListener.onException(null, request, e);
+				}
+			}
 		}
 	}
 	
@@ -87,17 +78,15 @@ public class ThreadedRestClient implements Closeable {
 
 	@Override
 	public synchronized void close() throws IOException {
-		if (!closed.get()) {
-			closed.set(true);
-			httpclient.close();
-			connManager.shutdown();
+		if (!ThreadedRestClientPool.getInstance().isShutdown()) {
+			ThreadedRestClientPool.getInstance().close();
 		}
 	}
 	
 	public boolean isClosed() {
-		return closed.get();
+		return ThreadedRestClientPool.getInstance().isShutdown();
 	}
-
+ 
 	public void get(String server, String requestUri, HttpRequestCallback callback) throws IOException, URISyntaxException {
 		requestAsync(server, Method.GET, requestUri, null, null, callback);
 	}
