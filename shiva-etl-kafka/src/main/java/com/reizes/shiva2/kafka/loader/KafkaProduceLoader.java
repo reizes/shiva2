@@ -32,16 +32,18 @@ public class KafkaProduceLoader extends AbstractLoader implements AfterProcessAw
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object doProcess(Object input) throws Exception {
-		if (input instanceof String) {
-			producerHelpder.send(this.topic, this.messageKey, (String)input);
-		} else if (input instanceof Map) {
-			Map<String, Object> map = (Map<String, Object>) input;
-			String messageKey = null;
-			if (messageKeyName!=null) {
-				messageKey = map.get(messageKeyName).toString();
+		if (input != null) {
+			if (input instanceof String) {
+				producerHelpder.send(this.topic, this.messageKey, (String)input);
+			} else if (input instanceof Map) {
+				Map<String, Object> map = (Map<String, Object>) input;
+				String messageKey = null;
+				if (messageKeyName!=null) {
+					messageKey = map.get(messageKeyName).toString();
+				}
+				String message = StringUtils.removePattern(gson.toJson(map), "[\r\n\t]");
+				producerHelpder.send(this.topic, messageKey, message);
 			}
-			String message = StringUtils.removePattern(gson.toJson(map), "[\r\n\t]");
-			producerHelpder.send(this.topic, messageKey, message);
 		}
 		return input;
 	}
