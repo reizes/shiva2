@@ -4,7 +4,7 @@ import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.context.ProcessContextAware;
 
 public class Tasks extends TasksBase implements TasksProcessorAware, BeforeProcessAware,
-	AfterProcessAware {
+	AfterProcessAware, BeforeItemProcessAware, AfterItemProcessAware {
 
 	@Override
 	public Object doProcess(Object input) throws Exception {
@@ -52,6 +52,16 @@ public class Tasks extends TasksBase implements TasksProcessorAware, BeforeProce
 	@Override
 	public void onAfterProcess(ProcessContext context, Object data) throws Exception {
 		callAfterProcessAware(context, data);
+	}
+
+	@Override
+	public void onAfterItemProcess(ProcessContext context, Object data) throws Exception {
+		callAfterItemProcessAware(context, data);
+	}
+
+	@Override
+	public void onBeforeItemProcess(ProcessContext context, Object data) throws Exception {
+		callBeforeItemProcessAware(context, data);
 	}
 
 }

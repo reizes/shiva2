@@ -132,7 +132,7 @@ public class ESTransportBulkLoader extends AbstractLoader implements Closeable, 
 
 	@Override
 	public synchronized void flush() throws IOException {
-		if (isBulkLoad()) {
+		if (isBulkLoad() && client != null) {
 			BulkResponse response = client.executeBulk();
 			currentCount = 0;
 			if (response!=null && response.hasFailures()) {

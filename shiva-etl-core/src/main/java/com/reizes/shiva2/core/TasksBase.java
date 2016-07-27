@@ -156,6 +156,26 @@ public abstract class TasksBase extends AbstractNotificatableTask implements Man
 		}
 	}
 
+	protected void callBeforeItemProcessAware(ProcessContext context, Object data) throws Exception {
+		if (this.elementList != null) {
+			for (Task task : this.elementList) {
+				if (task instanceof BeforeItemProcessAware) {
+					((BeforeItemProcessAware)task).onBeforeItemProcess(context, data);
+				}
+			}
+		}
+	}
+
+	protected void callAfterItemProcessAware(ProcessContext context, Object data) throws Exception {
+		if (this.elementList != null) {
+			for (Task task : this.elementList) {
+				if (task instanceof AfterItemProcessAware) {
+					((AfterItemProcessAware)task).onAfterItemProcess(context, data);
+				}
+			}
+		}
+	}
+
 	@Override
 	public void setProcessContext(ProcessContext context) {
 		if (isShareProcessContext()) {
