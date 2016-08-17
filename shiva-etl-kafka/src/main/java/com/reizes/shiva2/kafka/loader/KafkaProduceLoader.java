@@ -4,29 +4,26 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.gson.Gson;
 import com.reizes.shiva2.core.AfterProcessAware;
 import com.reizes.shiva2.core.context.ProcessContext;
 import com.reizes.shiva2.core.loader.AbstractLoader;
+import com.reizes.shiva2.utils.JsonUtils;
 
 public class KafkaProduceLoader extends AbstractLoader implements AfterProcessAware {
 	private KafkaProducerHelper producerHelpder;
 	private String topic;
 	private String messageKeyName;
 	private String messageKey = null;	// static message key
-	private Gson gson;
 
 	public KafkaProduceLoader(String topic, Map<java.lang.String, java.lang.Object> configs) {
 		producerHelpder = new KafkaProducerHelper(configs);
 		this.topic = topic;
-		gson = new Gson();
 	}
 
 	public KafkaProduceLoader(String topic, String messageKeyName, Map<java.lang.String, java.lang.Object> configs) {
 		producerHelpder = new KafkaProducerHelper(configs);
 		this.topic = topic;
 		this.messageKeyName = messageKeyName;
-		gson = new Gson();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -41,7 +38,7 @@ public class KafkaProduceLoader extends AbstractLoader implements AfterProcessAw
 				if (messageKeyName!=null) {
 					messageKey = map.get(messageKeyName).toString();
 				}
-				String message = StringUtils.removePattern(gson.toJson(map), "[\r\n\t]");
+				String message = StringUtils.removePattern(JsonUtils.toJson(map), "[\r\n\t]");
 				producerHelpder.send(this.topic, messageKey, message);
 			}
 		}

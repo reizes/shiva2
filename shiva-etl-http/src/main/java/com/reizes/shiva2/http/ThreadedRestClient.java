@@ -20,16 +20,15 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 
-import com.google.gson.Gson;
 import com.reizes.shiva2.core.ExceptionListener;
 import com.reizes.shiva2.http.inner.Utils;
+import com.reizes.shiva2.utils.JsonUtils;
 
 import lombok.Getter;
 import lombok.Setter;
 
 public class ThreadedRestClient implements Closeable {
 	private static ThreadedRestClient instance = null;
-	private Gson gson = new Gson();
 	private CloseableHttpClient httpclient;
 
 	@Getter
@@ -136,19 +135,19 @@ public class ThreadedRestClient implements Closeable {
 	}
 
 	public void postJsonString(String server, String requestUri, String jsonData, HttpRequestCallback callback) throws IOException, URISyntaxException {
-		postString(server, requestUri, null, gson.toJson(jsonData), "application/json", callback);
+		postString(server, requestUri, null, JsonUtils.toJson(jsonData), "application/json", callback);
 	}
 
 	public void postJsonString(String server, String requestUri, Map<String, String> headers, String jsonData, HttpRequestCallback callback) throws IOException, URISyntaxException {
-		postString(server, requestUri, headers, gson.toJson(jsonData), "application/json", callback);
+		postString(server, requestUri, headers, JsonUtils.toJson(jsonData), "application/json", callback);
 	}
 
 	public void postJson(String server, String requestUri, Map<String, Object> jsonData, HttpRequestCallback callback) throws IOException, URISyntaxException {
-		postJsonString(server, requestUri,gson.toJson(jsonData), callback);
+		postJsonString(server, requestUri,JsonUtils.toJson(jsonData), callback);
 	}
 
 	public void postJson(String server, String requestUri, Map<String, String> headers, Map<String, Object> jsonData, HttpRequestCallback callback) throws IOException, URISyntaxException {
-		postJsonString(server, requestUri, headers, gson.toJson(jsonData), callback);
+		postJsonString(server, requestUri, headers, JsonUtils.toJson(jsonData), callback);
 	}
 
 	public void postFormParams(String server, String requestUri, Map<String, String> params, HttpRequestCallback callback) throws IOException, URISyntaxException {
@@ -216,11 +215,11 @@ public class ThreadedRestClient implements Closeable {
 	}
 
 	public void putJson(String server, String requestUri, Map<String, Object> jsonData, HttpRequestCallback callback) throws IOException, URISyntaxException {
-		putJsonString(server, requestUri, gson.toJson(jsonData), callback);
+		putJsonString(server, requestUri, JsonUtils.toJson(jsonData), callback);
 	}
 
 	public void putJson(String server, String requestUri, Map<String, String> headers, Map<String, Object> jsonData, HttpRequestCallback callback) throws IOException, URISyntaxException {
-		putJsonString(server, requestUri, headers, gson.toJson(jsonData), callback);
+		putJsonString(server, requestUri, headers, JsonUtils.toJson(jsonData), callback);
 	}
 
 	public void putFormParams(String server, String requestUri, Map<String, String> params, HttpRequestCallback callback) throws IOException, URISyntaxException {

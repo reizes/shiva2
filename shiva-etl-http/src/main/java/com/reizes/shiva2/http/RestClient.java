@@ -19,13 +19,12 @@ import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 
-import com.google.gson.Gson;
 import com.reizes.shiva2.http.inner.Utils;
+import com.reizes.shiva2.utils.JsonUtils;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RestClient implements Closeable {
 	private URI uri;
-	private Gson gson = new Gson();
 	private boolean chunked = true;
 	protected CloseableHttpClient httpclient;
 
@@ -117,19 +115,19 @@ public class RestClient implements Closeable {
 	}
 
 	public RestClientResponse postJsonString(String requestUri, String jsonData) throws IOException {
-		return postString(requestUri, null, gson.toJson(jsonData), "application/json");
+		return postString(requestUri, null, JsonUtils.toJson(jsonData), "application/json");
 	}
 
 	public RestClientResponse postJsonString(String requestUri, Map<String, String> headers, String jsonData) throws IOException {
-		return postString(requestUri, headers, gson.toJson(jsonData), "application/json");
+		return postString(requestUri, headers, JsonUtils.toJson(jsonData), "application/json");
 	}
 
 	public RestClientResponse postJson(String requestUri, Map<String, Object> jsonData) throws IOException {
-		return postJsonString(requestUri,gson.toJson(jsonData));
+		return postJsonString(requestUri,JsonUtils.toJson(jsonData));
 	}
 
 	public RestClientResponse postJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
-		return postJsonString(requestUri, headers, gson.toJson(jsonData));
+		return postJsonString(requestUri, headers, JsonUtils.toJson(jsonData));
 	}
 
 	public RestClientResponse postFormParams(String requestUri, Map<String, String> params) throws IOException {
@@ -185,11 +183,11 @@ public class RestClient implements Closeable {
 	}
 
 	public RestClientResponse putJson(String requestUri, Map<String, Object> jsonData) throws IOException {
-		return putJsonString(requestUri, gson.toJson(jsonData));
+		return putJsonString(requestUri, JsonUtils.toJson(jsonData));
 	}
 
 	public RestClientResponse putJson(String requestUri, Map<String, String> headers, Map<String, Object> jsonData) throws IOException {
-		return putJsonString(requestUri, headers, gson.toJson(jsonData));
+		return putJsonString(requestUri, headers, JsonUtils.toJson(jsonData));
 	}
 
 	public RestClientResponse putFormParams(String requestUri, Map<String, String> params) throws IOException {

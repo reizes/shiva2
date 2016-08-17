@@ -19,11 +19,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.gson.Gson;
-
 public class ESClientTest {
 	ESTransportClient client;
-	Gson gson;
 	
 	String index="shiva2-es-test";
 	String type="test-doc";
@@ -40,7 +37,6 @@ public class ESClientTest {
 		configs.put("hosts", hosts);
 		configs.put("cluster.name", "smeagol-contents");
 		client = new ESTransportClient(configs);
-		gson = new Gson();
 		
 		testDoc = new HashMap<>();
 		testDoc.put("field1", "data1");

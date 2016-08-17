@@ -13,7 +13,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.entity.BufferedHttpEntity;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.reizes.shiva2.utils.JsonUtils;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +31,6 @@ public class RestClientResponse {
 	private Map<String, String> headers = new HashMap<String, String>();
 	@Getter
 	private String responseText;
-	private Gson gson = new Gson();
 	
 	public void putHeader(String key, String value) {
 		this.headers.put(key, value);
@@ -44,9 +45,8 @@ public class RestClientResponse {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	public Map<String, Object> getResponseJson() {
-		return responseText!=null?gson.fromJson((String)responseText, HashMap.class):null;
+	public Map<String, Object> getResponseJson() throws JsonParseException, JsonMappingException, IOException {
+		return responseText!=null?JsonUtils.fromJson((String)responseText):null;
 	}
 	
 	private String getResponseText(InputStream is) throws IOException {
