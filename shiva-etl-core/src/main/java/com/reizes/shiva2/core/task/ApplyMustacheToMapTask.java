@@ -1,6 +1,8 @@
 package com.reizes.shiva2.core.task;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -23,7 +25,7 @@ public class ApplyMustacheToMapTask extends AbstractTask implements BeforeProces
 	private Mustache mustache;
 	private Map<String, Object> functions;
 	private String scriptEngineName = "nashorn";
-	private String templateFilePath;
+	private InputStream templateInputStream;
 	private Reader templateFileReader;
 	private Invocable invocable;
 	
@@ -31,13 +33,22 @@ public class ApplyMustacheToMapTask extends AbstractTask implements BeforeProces
 		
 	}
 	
-	public ApplyMustacheToMapTask(String templateFilePath) {
+	public ApplyMustacheToMapTask(String templateFilePath) throws FileNotFoundException {
 		this.setTemplateFilePath(templateFilePath);
 	}
 	
-	public ApplyMustacheToMapTask(String scriptEngineName, String templateFilePath) {
+	public ApplyMustacheToMapTask(String scriptEngineName, String templateFilePath) throws FileNotFoundException {
 		this.setScriptEngineName(scriptEngineName);
 		this.setTemplateFilePath(templateFilePath);
+	}
+	
+	public ApplyMustacheToMapTask(InputStream templateInputStream) {
+		this.setTemplateInputStream(templateInputStream);
+	}
+	
+	public ApplyMustacheToMapTask(String scriptEngineName, InputStream templateInputStream) {
+		this.setScriptEngineName(scriptEngineName);
+		this.setTemplateInputStream(templateInputStream);
 	}
 
 	public Map<String, Object> getFunctions() {
@@ -58,12 +69,16 @@ public class ApplyMustacheToMapTask extends AbstractTask implements BeforeProces
 		return this;
 	}
 
-	public String getTemplateFilePath() {
-		return templateFilePath;
+	public ApplyMustacheToMapTask setTemplateFilePath(String templateFilePath) throws FileNotFoundException {
+		return setTemplateInputStream(new FileInputStream(templateFilePath));
 	}
 
-	public ApplyMustacheToMapTask setTemplateFilePath(String templateFilePath) {
-		this.templateFilePath = templateFilePath;
+	public InputStream getTemplateInputStream() {
+		return templateInputStream;
+	}
+
+	public ApplyMustacheToMapTask setTemplateInputStream(InputStream templateInputStream) {
+		this.templateInputStream = templateInputStream;
 		return this;
 	}
 
@@ -118,7 +133,7 @@ public class ApplyMustacheToMapTask extends AbstractTask implements BeforeProces
 	@Override
 	public void onBeforeProcess(ProcessContext context, Object data) throws Exception {
 		compileCustomFunctions();
-		this.templateFileReader = new InputStreamReader(new FileInputStream(this.templateFilePath));
+		this.templateFileReader = new InputStreamReader(templateInputStream);
 		this.mustache = mf.compile(this.templateFileReader, "MapMustacheTemplateApplyTransformerMap");
 	}
 
