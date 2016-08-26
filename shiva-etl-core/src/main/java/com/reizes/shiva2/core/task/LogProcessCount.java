@@ -17,7 +17,7 @@ public class LogProcessCount implements Task, ProcessContextAware {
 	private long step = 1000;
 	private long initialCount = 0;
 	private String msgFormat = "Current Process : %d";
-	private OutputStream outputStream;
+	private OutputStream outputStream = System.out;
 	
 	public LogProcessCount() {
 	}
