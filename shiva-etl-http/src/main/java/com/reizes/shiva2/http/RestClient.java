@@ -115,11 +115,11 @@ public class RestClient implements Closeable {
 	}
 
 	public RestClientResponse postJsonString(String requestUri, String jsonData) throws IOException {
-		return postString(requestUri, null, JsonUtils.toJson(jsonData), "application/json");
+		return postString(requestUri, null, jsonData, "application/json");
 	}
 
 	public RestClientResponse postJsonString(String requestUri, Map<String, String> headers, String jsonData) throws IOException {
-		return postString(requestUri, headers, JsonUtils.toJson(jsonData), "application/json");
+		return postString(requestUri, headers, jsonData, "application/json");
 	}
 
 	public RestClientResponse postJson(String requestUri, Map<String, Object> jsonData) throws IOException {
