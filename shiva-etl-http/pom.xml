@@ -8,7 +8,7 @@
   <groupId>com.reizes.shiva2</groupId>
   <artifactId>shiva2-http</artifactId>
   <name>shiva http</name>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.2.1</version>
   <description>Shiva HTTP Support Library 2016 reizes</description>
   <dependencies>
     <dependency>

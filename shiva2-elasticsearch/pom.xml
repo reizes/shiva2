@@ -9,7 +9,7 @@
 	<groupId>com.reizes.shiva2</groupId>
 	<artifactId>shiva2-elasticsearch</artifactId>
 	<name>shiva elasticsearch</name>
-	<version>0.2.1-SNAPSHOT</version>
+	<version>0.2.1</version>
 	<description>Shiva Elastic Search Support Library 2016 reizes</description>
 	<dependencies>
 		<dependency>
