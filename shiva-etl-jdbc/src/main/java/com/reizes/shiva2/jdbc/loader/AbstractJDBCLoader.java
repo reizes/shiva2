@@ -192,6 +192,10 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 			executeBatch(preparedStatement);
 			curBatchUpdateCnt.set(0);
 		}
+		closeConnection();
+	}
+	
+	public void closeConnection() throws SQLException {
 		if (preparedStatement != null) {
 			preparedStatement.clearBatch();
 			preparedStatement.close();
@@ -258,6 +262,7 @@ public abstract class AbstractJDBCLoader extends AbstractLoader implements Flush
 	public void flush() throws IOException  {
 		if (isSupportsBatchUpdates()) {
 			try {
+				connect();
 				updatedCount = executeBatch(preparedStatement);
 				curBatchUpdateCnt.set(0);
 			} catch (SQLException e) {

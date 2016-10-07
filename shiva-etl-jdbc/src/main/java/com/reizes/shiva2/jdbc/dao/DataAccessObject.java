@@ -64,6 +64,7 @@ public class DataAccessObject {
 
 	private Map<Class<?>, TypeHandler<?, ?>> handlerMap;
 	private boolean streamResultMode = false;
+	private DataSource datasource;
 
 	private Map preparedStatementCache = new LRUMap() {
 		@Override
@@ -102,21 +103,22 @@ public class DataAccessObject {
 	 * @throws SQLException -
 	 */
 	public DataAccessObject(DataSource datasource) throws SQLException {
-		conn = datasource.getConnection();
+		this.datasource = datasource;
+		conn = this.datasource.getConnection();
 		initialize();
 	}
 
 	public DataAccessObject(Properties prop) throws Exception {
-		DataSource datasource = BasicDataSourceFactory.createDataSource(prop);
-		conn = datasource.getConnection();
+		this.datasource = BasicDataSourceFactory.createDataSource(prop);
+		conn = this.datasource.getConnection();
 		initialize();
 	}
 
 	public DataAccessObject(Map<String, Object> datasourceProperties) throws Exception {
 		Properties prop = new Properties();
 		prop.putAll(datasourceProperties);
-		DataSource datasource = BasicDataSourceFactory.createDataSource(prop);
-		conn = datasource.getConnection();
+		this.datasource = BasicDataSourceFactory.createDataSource(prop);
+		conn = this.datasource.getConnection();
 		initialize();
 	}
 
@@ -162,6 +164,18 @@ public class DataAccessObject {
 	 */
 	public void close() throws SQLException {
 		conn.close();
+	}
+	
+	/**
+	 * get connection again
+	 * @throws SQLException 
+	 * @since 0.2.2
+	 */
+	public void refreshConnection() throws SQLException {
+		if (conn!=null && !conn.isClosed()) {
+			close();
+		}
+		conn = this.datasource.getConnection();
 	}
 
 	/**

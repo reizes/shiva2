@@ -9,7 +9,7 @@
 	<groupId>com.reizes.shiva2</groupId>
 	<artifactId>shiva2-core</artifactId>
 	<name>shiva core</name>
-	<version>0.2.1</version>
+	<version>0.2.2-SNAPSHOT</version>
 	<description>Shiva Core Library</description>
 	<dependencies>
 		<dependency>
