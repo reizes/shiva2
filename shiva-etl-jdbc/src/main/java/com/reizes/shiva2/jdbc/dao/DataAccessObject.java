@@ -66,7 +66,8 @@ public class DataAccessObject {
 	private boolean streamResultMode = false;
 	private DataSource datasource;
 
-	private Map preparedStatementCache = new LRUMap() {
+	@SuppressWarnings({ "unchecked", "serial" })
+	private Map<String, PreparedStatement> preparedStatementCache = new LRUMap() {
 		@Override
 		protected boolean removeLRU(LinkEntry entry) {
 			PreparedStatement ps = (PreparedStatement) entry.getValue();
@@ -163,6 +164,10 @@ public class DataAccessObject {
 	 * @throws SQLException -
 	 */
 	public void close() throws SQLException {
+		for(PreparedStatement prstmt : preparedStatementCache.values()) {
+			prstmt.close();
+		}
+		preparedStatementCache.clear();
 		conn.close();
 	}
 	
