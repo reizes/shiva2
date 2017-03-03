@@ -33,9 +33,9 @@ public class ESClientTest {
 	public void setUp() throws Exception {
 		Map<String, Object> configs = new HashMap<>();
 		List<String> hosts = new ArrayList<>();
-		hosts.add("s2-es-test.s2.krane.9rum.cc:9300");
+		hosts.add("127.0.0.1:9300");
 		configs.put("hosts", hosts);
-		configs.put("cluster.name", "smeagol-contents");
+		configs.put("cluster.name", "contents");
 		client = new ESTransportClient(configs);
 		
 		testDoc = new HashMap<>();
